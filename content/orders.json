@@ -154,17 +154,5 @@
     "pathWidth": "0.5",
     "isPathMoving": "0",
     "timeLimit": "0"
-  },
-  {
-    "_file": "test01.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "test01",
-    "clientName": "",
-    "rewardAmount": "",
-    "durationHours": "",
-    "staminaCost": "",
-    "pathWidth": "",
-    "isPathMoving": "",
-    "timeLimit": ""
   }
 ]

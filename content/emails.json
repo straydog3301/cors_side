@@ -54,13 +54,5 @@
     "sender": "寄件人",
     "subject": "主題006",
     "content": "內容006"
-  },
-  {
-    "_file": "test01.asset",
-    "_type": "CyberOccult.Data.EmailData",
-    "id": "test01",
-    "sender": "",
-    "subject": "",
-    "content": ""
   }
 ]
