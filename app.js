@@ -74,6 +74,8 @@
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     const v = document.getElementById(`view-${name}`);
     if (v) v.classList.add('active');
+    // Toggle CRT scanlines overlay — off for database view (conflicts with white iframe)
+    document.body.classList.toggle('scanlines', name !== 'database');
     const titles = { dashboard:'Dashboard', characters:'角色', world:'世界觀', systems:'系統', notes:'開發筆記', settings:'設定' };
     document.getElementById('view-title').textContent = titles[name] || name;
     if (name === 'settings') loadSettings();
@@ -1106,6 +1108,9 @@
     // Restore font size
     const savedFontSize = localStorage.getItem('cors_font_size');
     if (savedFontSize) document.documentElement.style.fontSize = savedFontSize;
+
+    // Start with scanlines overlay on (dashboard is default view)
+    document.body.classList.add('scanlines');
 
     // Try reconnect GitHub if token saved
     if (state.githubToken) {
