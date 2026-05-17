@@ -490,8 +490,10 @@
   async function pushToGithub() {
     if (!state.githubToken) { toast('請先連接 GitHub（設定頁面）', 'error'); return; }
     const repo = document.getElementById('setting-repo').value || 'straydog3301/cors_side';
+    const statusEl = document.getElementById('sync-status');
+    statusEl.textContent = '準備推送...';
     const data = GameData.exportAll();
-    const files = {
+    const fileContents = {
       'content/orders.json': JSON.stringify(data.orders, null, 2),
       'content/events.json': JSON.stringify(data.events, null, 2),
       'content/items.json': JSON.stringify(data.items, null, 2),
@@ -500,39 +502,67 @@
       'content/notes.json': JSON.stringify(data.notes, null, 2),
       'content/meta.json': JSON.stringify(data.meta, null, 2),
     };
-    const statusEl = document.getElementById('sync-status');
-    statusEl.textContent = '推送中...（取 SHA...）';
-    let success = 0, fail = 0;
-    const shaCache = {};
-    // Pre-fetch SHAs for all files
-    for (const path of Object.keys(files)) {
-      try {
-        const file = await API.getFile(path, repo);
-        shaCache[path] = file.sha;
-      } catch(e) {
-        // File doesn't exist yet — no SHA needed
-        shaCache[path] = null;
+    try {
+      statusEl.textContent = '建立 blob...';
+      // Step 1: Create blobs for all files
+      const blobs = {};
+      for (const [path, content] of Object.entries(fileContents)) {
+        const blob = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+          method: 'POST',
+          headers: API.headers(state.githubToken),
+          body: JSON.stringify({
+            content,
+            encoding: 'utf-8'
+          })
+        }).then(r => { if (!r.ok) throw new Error(`Blob creation failed: ${r.status}`); return r.json(); });
+        blobs[path] = blob.sha;
       }
-    }
-    statusEl.textContent = '推送中...';
-    for (const [path, content] of Object.entries(files)) {
-      try {
-        await API.putFile(path, content, repo, shaCache[path], `docs: update ${path} via CORS Dev Panel`);
-        success++;
-        statusEl.textContent = `推送中... ${success}/${Object.keys(files).length}`;
-      } catch(e) {
-        fail++;
-        console.error(`Push failed for ${path}:`, e);
-        statusEl.innerHTML = `<span style="color:var(--danger)">⚠ 失敗：${e.message}</span>`;
-        toast(`推送失敗：${path} — ${e.message}`, 'error');
-      }
-    }
-    if (fail === 0) {
-      statusEl.innerHTML = `<span style="color:var(--success)">✓ 成功推送 ${success} 個檔案</span>`;
-      toast(`已推送 ${success} 個檔案至 GitHub`, 'success');
-    } else {
-      statusEl.innerHTML = `<span style="color:var(--warning)">⚠ 推送完成：${success} 成功，${fail} 失敗</span>`;
-      toast(`推送完成：${success} 成功，${fail} 失敗`, 'info');
+      statusEl.textContent = '建立 commit...';
+      // Step 2: Get current HEAD
+      const head = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/main`, {
+        headers: API.headers(state.githubToken)
+      }).then(r => r.json());
+      const parentSha = head.object.sha;
+      const parentCommit = await fetch(`https://api.github.com/repos/${repo}/git/commits/${parentSha}`, {
+        headers: API.headers(state.githubToken)
+      }).then(r => r.json());
+      // Step 3: Create new tree
+      const treeItems = Object.entries(blobs).map(([path, sha]) => ({
+        path,
+        mode: '100644',
+        type: 'blob',
+        sha
+      }));
+      const newTree = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+        method: 'POST',
+        headers: API.headers(state.githubToken),
+        body: JSON.stringify({
+          base_tree: parentCommit.tree.sha,
+          tree: treeItems
+        })
+      }).then(r => { if (!r.ok) throw new Error(`Tree creation failed: ${r.status}`); return r.json(); });
+      // Step 4: Create commit
+      const newCommit = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
+        method: 'POST',
+        headers: API.headers(state.githubToken),
+        body: JSON.stringify({
+          message: `docs: sync all data files via CORS Dev Panel\n timestamp: ${new Date().toISOString()}`,
+          tree: newTree.sha,
+          parents: [parentSha]
+        })
+      }).then(r => { if (!r.ok) throw new Error(`Commit creation failed: ${r.status}`); return r.json(); });
+      // Step 5: Update branch ref
+      await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/main`, {
+        method: 'PATCH',
+        headers: API.headers(state.githubToken),
+        body: JSON.stringify({ sha: newCommit.sha, force: false })
+      }).then(r => { if (!r.ok) throw new Error(`Ref update failed: ${r.status}`); return r.json(); });
+      statusEl.innerHTML = `<span style="color:var(--success)">✓ 已推送全部 7 個檔案（1 次 commit）</span>`;
+      toast('已推送 7 個檔案至 GitHub（1 次 commit）', 'success');
+    } catch(e) {
+      console.error('Push error:', e);
+      statusEl.innerHTML = `<span style="color:var(--danger)">⚠ 推送失敗：${e.message}</span>`;
+      toast(`推送失敗：${e.message}`, 'error');
     }
   }
 
