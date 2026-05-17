@@ -136,10 +136,10 @@
     "_type": "CyberOccult.Data.OrderData",
     "orderID": "Test_001",
     "clientName": "測試用訂單",
-    "rewardAmount": 100,
+    "rewardAmount": "0",
     "durationHours": "0",
     "staminaCost": "0",
-    "pathWidth": 0.5,
+    "pathWidth": "0.5",
     "isPathMoving": "0",
     "timeLimit": "0"
   },
@@ -148,11 +148,23 @@
     "_type": "CyberOccult.Data.OrderData",
     "orderID": "Test_002",
     "clientName": "測試用訂單",
-    "rewardAmount": 100,
+    "rewardAmount": "0",
     "durationHours": "0",
     "staminaCost": "0",
-    "pathWidth": 0.5,
+    "pathWidth": "0.5",
     "isPathMoving": "0",
     "timeLimit": "0"
+  },
+  {
+    "_file": "test01.asset",
+    "_type": "CyberOccult.Data.OrderData",
+    "orderID": "test01",
+    "clientName": "",
+    "rewardAmount": "",
+    "durationHours": "",
+    "staminaCost": "",
+    "pathWidth": "",
+    "isPathMoving": "",
+    "timeLimit": ""
   }
 ]
