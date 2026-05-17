@@ -981,7 +981,12 @@
             delete rec._rowNote;
           }
           return rec;
-        }).filter(r => Object.keys(r).length > 0 && Object.values(r).some(v => v !== '' && v !== null && v !== undefined));
+        }).filter(r => {
+          // Skip records where the ID field (second column, B) is empty
+          const idField = fieldNames[1]; // B column after _rowNote
+          const idVal = r[idField];
+          return idVal !== '' && idVal !== null && idVal !== undefined;
+        });
         allData[name] = records;
       }
       statusEl.textContent = `✓ 已讀取 ${Object.keys(allData).length} 張表，準備下載...`;
