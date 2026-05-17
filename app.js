@@ -285,8 +285,9 @@
   // ── RENDER: World ──
   function renderWorld() {
     const tl = GameData.meta.world_timeline;
-    document.getElementById('world-timeline').innerHTML = tl.map(item => `
-      <div class="tl-item">
+    const editBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addWorldEvent()">+ 新增時間點</button></div>` : '';
+    document.getElementById('world-timeline').innerHTML = editBtn + tl.map((item, i) => `
+      <div class="tl-item" ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}')" style="cursor:pointer"` : ''}>
         <div class="tl-marker"></div>
         <div class="tl-year">${item.year}</div>
         <div class="tl-title">${item.title}</div>
@@ -364,6 +365,7 @@
     else if (type === 'notes') data = GameData.notes.find(n => n.id === id);
     else if (type === 'systems') data = GameData.meta.systems.find(s => s.id === id);
     else if (type === 'phases') data = GameData.meta.phases.find(p => p.name === id);
+    else if (type === 'world_timeline') data = GameData.meta.world_timeline.find(w => w.title === id);
 
     if (!data) { toast('找不到資料', 'error'); return; }
 
@@ -493,8 +495,11 @@
       textareaEls.forEach(el => {
         const field = el.dataset.field;
         let val = el.value;
-        // Try to parse numbers
-        val = isNaN(val) || val === '' ? val : (Number(val) || val);
+        // Try to parse numbers — BUT only if the original value was numeric
+        const orig = state.editData[field];
+        if (typeof orig === 'number') {
+          val = Number(val);
+        }
         // Auto-convert tags field: "tag1, tag2, tag3" → ["tag1","tag2","tag3"]
         if (field === 'tags' && typeof val === 'string' && val.trim()) {
           val = val.split(',').map(t => t.trim()).filter(Boolean);
@@ -537,6 +542,22 @@
       const idx = ph.findIndex(p => p.name === id);
       if (idx >= 0) GameData.meta = {...GameData.meta, phases: [...ph.slice(0,idx), {...ph[idx], ...newData}, ...ph.slice(idx+1)]};
     }
+    else if (type === 'world_timeline') {
+      const tl = GameData.meta.world_timeline;
+      const idx = tl.findIndex(w => w.title === id);
+      if (idx >= 0) GameData.meta = {...GameData.meta, world_timeline: [...tl.slice(0,idx), {...tl[idx], ...newData}, ...tl.slice(idx+1)]};
+    }
+  }
+
+  function addWorldEvent() {
+    if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
+    const title = prompt('時間點標題：');
+    if (!title) return;
+    const event = { year: '2088', title, desc: '請填寫描述' };
+    GameData.meta = {...GameData.meta, world_timeline: [...GameData.meta.world_timeline, event]};
+    renderWorld();
+    openEdit('world_timeline', title);
+    markDirty();
   }
 
   function newNote() {
@@ -665,60 +686,7 @@
     }
   }
 
-  // Build clean data.js content from current GameData
-  function buildDataJsContent(data) {
-    const quote = (s) => {
-      if (s == null) return 'null';
-      if (typeof s === 'number') return String(s);
-      return JSON.stringify(String(s));
-    };
-    const encode = (arr) => '[' + arr.map(item => {
-      const pairs = Object.entries(item).map(([k, v]) => {
-        if (Array.isArray(v)) return `${k}:${encode(v)}`;
-        return `${k}:${quote(v)}`;
-      }).join(',');
-      return `{${pairs}}`;
-    }).join(',') + ']';
-
-    return `// data.js — CORS Game Data (auto-generated, UTF-8 clean)
-// Last updated: ${new Date().toISOString()}
-
-const GameData = (function() {
-  const orders = ${encode(data.orders)};
-  const events = ${encode(data.events)};
-  const items = ${encode(data.items)};
-  const emails = ${encode(data.emails)};
-  const news = ${encode(data.news)};
-  const notes = ${encode(data.notes)};
-  const meta = ${JSON.stringify(data.meta, null, 2)};
-
-  // Overrides applied on top of defaults (set by edit)
-  const _overrides = {};
-
-  return {
-    get orders() { return _overrides.orders || orders; },
-    get events() { return _overrides.events || events; },
-    get items() { return _overrides.items || items; },
-    get emails() { return _overrides.emails || emails; },
-    get news() { return _overrides.news || news; },
-    get notes() { return _overrides.notes || notes; },
-    get meta() { return _overrides.meta || meta; },
-    set orders(v) { _overrides.orders = v; },
-    set events(v) { _overrides.events = v; },
-    set items(v) { _overrides.items = v; },
-    set emails(v) { _overrides.emails = v; },
-    set news(v) { _overrides.news = v; },
-    set notes(v) { _overrides.notes = v; },
-    set meta(v) { _overrides.meta = v; },
-    reset() { _overrides = {}; },
-    exportAll() {
-      return {orders:this.orders, events:this.events, items:this.items, emails:this.emails, news:this.news, meta:this.meta, notes:this.notes};
-    }
-  };
-})();
-`;
-  }
-
+  // Utility: push a single file to GitHub via PUT /contents (used by data.js rebuild, disabled for now)
   async function pushSingleFile(repo, path, content, msg) {
     try {
       let sha;
@@ -734,6 +702,14 @@ const GameData = (function() {
     }
   }
 
+  function base64Utf8Decode(b64) {
+    // atob is not safe for UTF-8 Chinese characters.
+    const binStr = atob(b64.replace(/\n/g, ''));
+    const bytes = new Uint8Array(binStr.length);
+    for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+    return new TextDecoder('utf-8').decode(bytes);
+  }
+
   async function loadFromGithub() {
     if (!state.githubToken) { toast('請先連接 GitHub', 'error'); return; }
     const repo = document.getElementById('setting-repo').value || 'straydog3301/cors_side';
@@ -744,7 +720,7 @@ const GameData = (function() {
     for (const name of files) {
       try {
         const file = await API.getFile(`content/${name}.json`, repo);
-        const content = atob(file.content.replace(/\n/g, ''));
+        const content = base64Utf8Decode(file.content);
         const data = JSON.parse(content);
         GameData[name === 'meta' ? 'meta' : name] = data;
         loaded++;
@@ -752,20 +728,7 @@ const GameData = (function() {
         console.warn(`Load failed for ${name}:`, e);
       }
     }
-    statusEl.innerHTML = `<span style="color:var(--cyan)">✓ 已拉取 ${loaded}/${files.length} 個檔案，正在重建 data.js...</span>`;
-
-    // Regenerate data.js with clean UTF-8 and push back to GitHub
-    const allData = GameData.exportAll();
-    const dataJsContent = buildDataJsContent(allData);
-    const ok = await pushSingleFile(repo, 'data.js', dataJsContent,
-      `fix: regenerate data.js (clean UTF-8) from content/*.json\ntimestamp: ${new Date().toISOString()}`);
-    if (ok) {
-      statusEl.innerHTML = `<span style="color:var(--success)">✓ 已拉取 ${loaded}/${files.length} 個檔案 + data.js 已重建</span>`;
-    } else {
-      statusEl.innerHTML = `<span style="color:var(--gold)">✓ 已拉取 ${loaded}/${files.length} 個檔案（data.js 重建失敗，請稍後刷新重試）</span>`;
-    }
-
-    // Always persist to localStorage so edits survive refresh even without autosave
+    statusEl.innerHTML = `<span style="color:var(--success)">✓ 已拉取 ${loaded}/${files.length} 個檔案</span>`;
     saveToLocalStorage();
     renderCurrentView();
     toast(`已從 GitHub 拉取 ${loaded} 個檔案`, 'success');
@@ -830,7 +793,7 @@ const GameData = (function() {
     switchView, renderCurrentView,
     toggleEdit, openEdit, editCancel, editSave, markDirty,
     showJsonEditor, showBlockEditor, addField, addRecord, deleteBlock,
-    newNote, filterBacklog, openSettings,
+    newNote, addWorldEvent, filterBacklog, openSettings,
     saveToken, saveEditPassword, toggleAutosave, toggleShowIds, resetLocal,
     connectGithub, pushToGithub, loadFromGithub,
     saveAll, saveToLocalStorage
