@@ -1,0 +1,73 @@
+[
+  {
+    "_file": "Quest_Result.asset",
+    "_type": "CyberOccult.Data.NewsItemData",
+    "m_Name": "Quest_Result",
+    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.NewsItemData",
+    "id": "Quest_Result",
+    "type": "0",
+    "headline": "\\u4E0B\\u6C34\\u9053\\u767C\\u73FE\\u4E0D\\u660E\\u6B98\\u9AB8",
+    "content": "\\u8B66\\u65B9\\u5728\\u6628\\u665A\\u7684\\u6383\\u8569\\u884C\\u52D5\\u4E2D\\u767C\\u73FE\\u4E86\\u4E00\\u5177\\u6539\\u9020\\u4EBA\\u7684\\u6B98\\u9AB8\\uFF0C\\u7591\\u4F3C\\u662F\\u4E4B\\u524D\\u901A\\u7DDD\\u7684\\u99ED\\u5BA2\\u3002",
+    "image": "{fileID: 0}",
+    "priority": "100",
+    "minDay": "1",
+    "isOneTime": "1",
+    "requiredVarName": "b_hacker_dead",
+    "requiredVarValue": "true",
+    "conditionMode": "0"
+  },
+  {
+    "_file": "Corp_01.asset",
+    "_type": "CyberOccult.Data.NewsItemData",
+    "m_Name": "Corp_01",
+    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.NewsItemData",
+    "id": "Corp_01",
+    "type": "2",
+    "headline": "\\u5E7B\\u5149\\u79D1\\u6280\\u80A1\\u50F9\\u5927\\u8DCC",
+    "content": "\\u64DA\\u50B3\\u662F\\u56E0\\u70BA\\u6700\\u65B0\\u7684\\u8ECD\\u7528\\u7FA9\\u9AD4\\u826F\\u7387\\u4E0D\\u8DB3\\uFF0C\\u5C0E\\u81F4\\u8207\\u6CBB\\u5B89\\u5C40\\u7684\\u5408\\u7D04\\u544A\\u5439\\u3002",
+    "image": "{fileID: 0}",
+    "priority": "10",
+    "minDay": "1",
+    "isOneTime": "1",
+    "conditionMode": "0"
+  },
+  {
+    "_file": "Glitch.asset",
+    "_type": "CyberOccult.Data.DailyModifierData",
+    "m_Name": "Glitch",
+    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.DailyModifierData",
+    "id": "Glitch",
+    "title": "\\u5340\\u57DF\\u6027\\u908F\\u8F2F\\u932F\\u8AA4",
+    "description": "\\u820A\\u5340\\u584A\\u767C\\u751F\\u9280\\u884C\\u5E33\\u672C\\u6EA2\\u4F4D\\u932F\\u8AA4\\uFF0C\\u63A2\\u7D22\\u6536\\u76CA\\u9810\\u671F\\u5927\\u5E45\\u589E\\u52A0\\u3002",
+    "themeColor": "{r: 1, g: 0.84313726, b: 0, a: 0.21568628}",
+    "effectType": "4",
+    "effectValue": "0.2",
+    "weight": "10"
+  },
+  {
+    "_file": "Storm.asset",
+    "_type": "CyberOccult.Data.DailyModifierData",
+    "m_Name": "Storm",
+    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.DailyModifierData",
+    "id": "Storm",
+    "title": "\\u26A0 \\u8B66\\u5831\\uFF1A\\u8CC7\\u6599\\u9006\\u6D41",
+    "description": "\\u5075\\u6E2C\\u5230\\u5927\\u91CF\\u60E1\\u610F\\u7A0B\\u5F0F\\u5BE6\\u9AD4\\u5316\\u53CD\\u61C9\\u3002\\u82E5\\u7121\\u5FC5\\u8981\\uFF0C\\u8ACB\\u6E1B\\u5C11\\u5916\\u51FA\\u6216\\u651C\\u5E36\\u9AD8\\u968E\\u9632\\u706B\\u7246\\u3002",
+    "themeColor": "{r: 1, g: 0.2, b: 0.2, a: 0.21568628}",
+    "effectType": "3",
+    "effectValue": "0.5",
+    "weight": "20"
+  },
+  {
+    "_file": "Clear.asset",
+    "_type": "CyberOccult.Data.DailyModifierData",
+    "m_Name": "Clear",
+    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.DailyModifierData",
+    "id": "Clear",
+    "title": "\\u4ECA\\u65E5\\u9748\\u7DB2\\u901A\\u66A2",
+    "description": "\\u6DF1\\u7DB2\\u5E95\\u5C64\\u96DC\\u8A0A\\u4F4E\\u65BC 5%\\uFF0C\\u8CC7\\u6599\\u50B3\\u8F38\\u963B\\u529B\\u6975\\u4F4E\\uFF0C\\u9069\\u5408\\u9577\\u9014\\u63A2\\u7D22\\u3002",
+    "themeColor": "{r: 0, g: 1, b: 0.8, a: 0.21568628}",
+    "effectType": "2",
+    "effectValue": "1",
+    "weight": "40"
+  }
+]
