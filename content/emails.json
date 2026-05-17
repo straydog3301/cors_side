@@ -2,77 +2,57 @@
   {
     "_file": "Mail_001.asset",
     "_type": "CyberOccult.Data.EmailData",
-    "m_Name": "Mail_001",
-    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.EmailData",
     "id": "Mail_001",
-    "sender": "\\u5BC4\\u4EF6\\u4EBA",
-    "subject": "\\u7DCA\\u6025\\u59D4\\u8A17",
-    "content": "\\u6E2C\\u8A66Mail"
+    "sender": "寄件人",
+    "subject": "緊急委託",
+    "content": "測試Mail"
   },
   {
     "_file": "Mail_002.asset",
     "_type": "CyberOccult.Data.EmailData",
-    "m_Name": "Mail_002",
-    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.EmailData",
     "id": "Mail_002",
-    "sender": "\\u5BC4\\u4EF6\\u4EBA",
-    "subject": "\\u7DCA\\u6025\\u59D4\\u8A172",
-    "content": "\\u6E2C\\u8A66Mail2",
-    "validDays": "3"
+    "sender": "寄件人",
+    "subject": "標題002",
+    "content": "內容002"
   },
   {
     "_file": "Tier1_001.asset",
     "_type": "CyberOccult.Data.EmailData",
-    "m_Name": "Tier1_001",
-    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.EmailData",
-    "id": "T1_001",
-    "sender": "\\u738B\\u5927\\u5ABD",
-    "subject": "\\u6025\\uFF01\\uFF01\\u6211\\u8001\\u516C\\u6536\\u4E0D\\u5230\\u4F9B\\u54C1\\u4E86\\uFF01",
-    "content": "\\u5C0F\\u5E2B\\u5085\\u554A\\uFF0C\\u6211\\u5BB6\\u90A3\\u500B\\u300C\\u5168\\u81EA\\u52D5\\u96F2\\u7AEF\\u9999\\u7210\\u300D\\u7A81\\u7136\\u4E0D\\u5192\\u7159\\u4E86\\u3002\\u4ECA\\u665A\\u662F\\u982D\\u4E03\\uFF0C\\u518D\\u4E0D\\u4FEE\\u597D\\u6211\\u6015\\u8001\\u982D\\u5B50\\u4ECA\\u665A\\u56DE\\u4F86\\u627E\\u6211\\u7B97\\u5E33\\uFF01\\u5FEB\\u9EDE\\u5E6B\\u5E6B\\u5FD9\\uFF01\\u671F\\u9650\\u7D66\\u4F60",
-    "validDays": "3"
+    "id": "T1Mail_001",
+    "sender": "寄件人",
+    "subject": "主題001",
+    "content": "內容001"
   },
   {
     "_file": "Tier1_002.asset",
     "_type": "CyberOccult.Data.EmailData",
-    "m_Name": "Tier1_002",
-    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.EmailData",
-    "id": "T1_002",
-    "sender": "\\u533F\\u540D\\u4E0A\\u73ED\\u65CF",
-    "subject": "\\u5B83\\u534A\\u591C\\u6703\\u81EA\\u5DF1\\u649E\\u7246",
-    "content": "\\u6211\\u7684\\u6383\\u5730\\u6A5F\\u5668\\u4EBA\\u6700\\u8FD1\\u602A\\u602A\\u7684\\uFF0C\\u7E3D\\u662F\\u534A\\u591C\\u4E09\\u9EDE\\u81EA\\u52D5\\u555F\\u52D5\\uFF0C\\u7136\\u5F8C\\u5C0D\\u8457\\u623F\\u5B50\\u6771\\u5317\\u89D2\\uFF08\\u9B3C\\u9580\\u4F4D\\uFF09\\u760B\\u72C2\\u649E\\u7246\\uFF0C\\u9084\\u767C\\u51FA\\u50CF\\u5728\\u5FF5\\u7D93\\u7684\\u4F4E\\u983B\\u566A\\u97F3\\u3002\\u80FD\\u5E6B\\u6211\\u770B\\u770B\\u662F\\u4E0D\\u662F\\u5C0E\\u822A\\u908F\\u8F2F\\u58DE\\u4E86\\uFF1F",
-    "validDays": "5"
+    "id": "T1Mail_002",
+    "sender": "寄件人",
+    "subject": "主題002",
+    "content": "內容002"
   },
   {
     "_file": "Tier1_003.asset",
     "_type": "CyberOccult.Data.EmailData",
-    "m_Name": "Tier1_003",
-    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.EmailData",
-    "id": "T1_003",
-    "sender": "\\u865B\\u64EC\\u5BFA\\u5EDF_\\u5BA2\\u670D",
-    "subject": "\\u529F\\u5FB7\\u8A08\\u6578\\u5668\\u6545\\u969C\\u7DAD\\u4FEE",
-    "content": "\\u60A8\\u597D\\uFF0C\\u9019\\u662F\\u672C\\u5BFA\\u5EDF\\u4F4F\\u6301\\u4F69\\u6234\\u7684\\u300C\\u667A\\u6167\\u578B\\u5FF5\\u73E0\\u300D\\u3002\\u6700\\u8FD1\\u8A08\\u6578\\u5668\\u6EA2\\u4F4D\\u4E86\\uFF0C\\u5C0E\\u81F4\\u4F4F\\u6301\\u5538\\u4E00\\u6B21\\u7D93\\uFF0C\\u529F\\u5FB7\\u986F\\u793A",
-    "validDays": "2"
+    "id": "T1Mail_003",
+    "sender": "寄件人",
+    "subject": "主題003",
+    "content": "內容003"
   },
   {
     "_file": "Tier1_005.asset",
     "_type": "CyberOccult.Data.EmailData",
-    "m_Name": "Tier1_005",
-    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.EmailData",
-    "id": "T1_005",
-    "sender": "\\u9694\\u58C1\\u4FBF\\u5229\\u5E97",
-    "subject": "\\u62DB\\u8CA1\\u8C93\\u62BD\\u7B4B\\u4E86",
-    "content": "\\u5E97\\u9580\\u53E3\\u90A3\\u96BB\\u7279\\u5927\\u865F\\u62DB\\u8CA1\\u8C93\\u7684\\u624B\\u81C2\\u5361\\u4F4F\\u4E86\\uFF0C\\u73FE\\u5728\\u5B83\\u4E0D\\u662F\\u5728\\u62DB\\u624B\\uFF0C\\u662F\\u5728\\u5C0D\\u5BA2\\u4EBA\\u6BD4\\u4E2D\\u6307\\uFF08\\u525B\\u597D\\u5361\\u5728\\u90A3\\u500B\\u89D2\\u5EA6\\uFF09\\u3002\\u751F\\u610F\\u90FD\\u8DD1\\u5149\\u4E86\\uFF01",
-    "validDays": "4"
+    "id": "T1Mail_005",
+    "sender": "寄件人",
+    "subject": "主題005",
+    "content": "內容005"
   },
   {
     "_file": "Tier1_006.asset",
     "_type": "CyberOccult.Data.EmailData",
-    "m_Name": "Tier1_006",
-    "m_EditorClassIdentifier": "Assembly-CSharp::CyberOccult.Data.EmailData",
-    "id": "T1_006",
-    "sender": "\\u9664\\u9748\\u5354\\u6703\\u65B0\\u624B",
-    "subject": "\\u589C\\u6A5F\\u9001\\u4FEE",
-    "content": "\\u7B2C\\u4E00\\u6B21\\u51FA\\u4EFB\\u52D9\\uFF0C\\u7121\\u4EBA\\u6A5F\\u88AB\\u60E1\\u9748\\u5410\\u4E86\\u53E3\\u6C34\\uFF08\\u7269\\u7406\\uFF09\\uFF0C\\u73FE\\u5728\\u99AC\\u9054\\u8F49\\u4E0D\\u52D5\\u4E86\\u3002\\u9019\\u53EF\\u662F\\u6211\\u5206\\u671F\\u4ED8\\u6B3E\\u8CB7\\u7684\\u554A...\\u4FBF\\u5B9C\\u9EDE\\u4FEE\\u53EF\\u4EE5\\u55CE\\uFF1F",
-    "validDays": "6"
+    "id": "T1Mail_006",
+    "sender": "寄件人",
+    "subject": "主題006",
+    "content": "內容006"
   }
 ]
