@@ -7,8 +7,6 @@
   // ── State ──
   const state = {
     currentView: 'dashboard',
-    backlogTab: 'orders',
-    backlogFilter: '',
     isEditMode: false,
     editTarget: null,      // { file: 'meta', section: 'characters', id: 'lycaon' }
     editDirty: false,
@@ -74,7 +72,7 @@
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     const v = document.getElementById(`view-${name}`);
     if (v) v.classList.add('active');
-    const titles = { dashboard:'Dashboard', backlog:'Backlog', characters:'角色', world:'世界觀', systems:'系統', notes:'開發筆記', settings:'設定' };
+    const titles = { dashboard:'Dashboard', characters:'角色', world:'世界觀', systems:'系統', notes:'開發筆記', settings:'設定' };
     document.getElementById('view-title').textContent = titles[name] || name;
     if (name === 'settings') loadSettings();
     renderCurrentView();
@@ -83,7 +81,6 @@
   function renderCurrentView() {
     switch (state.currentView) {
       case 'dashboard': renderDashboard(); break;
-      case 'backlog': renderBacklog(); break;
       case 'characters': renderCharacters(); break;
       case 'world': renderWorld(); break;
       case 'systems': renderSystems(); break;
@@ -94,74 +91,116 @@
   // ── RENDER: Dashboard ──
   function renderDashboard() {
     const meta = GameData.meta;
-    const stats = meta.stats;
-    const statsEl = document.getElementById('dash-stats');
-    statsEl.innerHTML = Object.entries(stats).map(([k,v]) => `
-      <div class="dash-stat-card">
-        <span class="dash-stat-num">${v}</span>
-        <span class="dash-stat-label">${k}</span>
-      </div>`).join('');
+
+    // Hero
+    const heroEl = document.getElementById('dash-hero');
+    if (heroEl) {
+      heroEl.innerHTML = `
+        <div class="dash-hero-title">${meta.title}</div>
+        <div class="dash-hero-tagline">${meta.tagline_zh} — ${meta.tagline_en}</div>
+        <div class="dash-hero-badges">${(meta.badges||[]).map(b => `<span class="dash-hero-badge">${b}</span>`).join('')}</div>
+      `;
+    }
 
     // Phases
     const phasesEl = document.getElementById('phases-list');
-    phasesEl.innerHTML = meta.phases.map(p => `
-      <div class="phase-item ${p.status}" data-phase="${p.name}">
-        <div class="phase-status-dot ${p.status}"></div>
-        <div>
-          <div class="phase-item-name">${p.name}</div>
-          <div class="phase-item-desc">${p.desc}</div>
-        </div>
-        <div class="phase-item-pct">${p.progress}%</div>
-        ${state.isEditMode ? `<button class="btn-sm btn-outline" style="margin-left:8px" onclick="app.openEdit('phases','${p.name}')">編輯</button>` : ''}
-      </div>`).join('');
-
-    // Orders
-    const orders = GameData.orders.slice(0, 5);
-    document.getElementById('order-count').textContent = `(${GameData.orders.length})`;
-    document.getElementById('dash-orders').innerHTML = orders.map(o => `
-      <div class="list-item" onclick="app.openEdit('orders','${o._file}')">
-        <span class="list-item-id">${o.orderID || o._file}</span>
-        <span class="list-item-name">${o.clientName || '(無名稱)'}</span>
-        <span class="list-item-meta">💰 ${o.rewardAmount} 期限${o.timeLimit}s</span>
-      </div>`).join('') || '<div class="list-item"><span class="list-item-name text-muted">暫無資料</span></div>';
-
-    // Events
-    const evts = GameData.events;
-    document.getElementById('event-count').textContent = `(${evts.length})`;
-    document.getElementById('dash-events').innerHTML = evts.map(e => `
-      <div class="list-item" onclick="app.openEdit('events','${e._file}')">
-        <span class="list-item-id">${e.id || e._file}</span>
-        <span class="list-item-name">Day ${e.startDay} - ${e.locationId || ''}</span>
-        <span class="list-item-meta">${e.startHour}:00 - ${e.endHour}:00</span>
-      </div>`).join('') || '<div class="list-item"><span class="list-item-name text-muted">暫無資料</span></div>';
-
-    // Items
-    document.getElementById('item-count').textContent = `(${GameData.items.length})`;
-    document.getElementById('dash-items').innerHTML = GameData.items.map(i => `
-      <div class="list-item" onclick="app.openEdit('items','${i._file}')">
-        <span class="list-item-id">${i.id}</span>
-        <span class="list-item-name">${i.itemName || '(無名稱)'}</span>
-        <span class="list-item-meta">💰 ${i.price || 0}</span>
-      </div>`).join('') || '<div class="list-item"><span class="list-item-name text-muted">暫無資料</span></div>';
-
-    // Emails
-    document.getElementById('email-count').textContent = `(${GameData.emails.length})`;
-    document.getElementById('dash-emails').innerHTML = GameData.emails.slice(0,5).map(m => `
-      <div class="list-item" onclick="app.openEdit('emails','${m.id}')">
-        <span class="list-item-id">${m.id}</span>
-        <span class="list-item-name">${m.subject || '(無主旨)'}</span>
-        <span class="list-item-meta">From: ${m.sender}</span>
-      </div>`).join('') || '<div class="list-item"><span class="list-item-name text-muted">暫無資料</span></div>';
-
-    // Phase indicator in sidebar
-    const activePhase = meta.phases.find(p => p.status === 'active');
-    if (activePhase) {
-      document.getElementById('current-phase-name').textContent = activePhase.name;
-      document.getElementById('phase-progress-fill').style.width = activePhase.progress + '%';
+    if (phasesEl) {
+      phasesEl.innerHTML = meta.phases.map(p => `
+        <div class="phase-item ${p.status}">
+          <div class="phase-status-dot ${p.status}"></div>
+          <div>
+            <div class="phase-item-name">${p.name}</div>
+            <div class="phase-item-desc">${p.desc}</div>
+          </div>
+          <div class="phase-item-pct">${p.progress}%</div>
+        </div>`).join('');
     }
 
-    // Backlog badge
-    document.getElementById('badge-backlog').textContent = GameData.orders.length + GameData.events.length;
+    // Stats
+    const statsEl = document.getElementById('dash-stats');
+    if (statsEl) {
+      statsEl.innerHTML = Object.entries(meta.stats||{}).map(([k,v]) => `
+        <div class="dash-stat-card">
+          <span class="dash-stat-num">${v}</span>
+          <span class="dash-stat-label">${k}</span>
+        </div>`).join('');
+    }
+
+    // Core Systems
+    const sysEl = document.getElementById('systems-list');
+    if (sysEl) {
+      const systems = [
+        { icon:'🔧', name:'維修系統', desc:'故障路徑導航'},
+        { icon:'🗺️', name:'派遣系統', desc:'隨機地圖·資源管理'},
+        { icon:'💰', name:'經濟系統', desc:'商店·物流·消耗品'},
+        { icon:'📰', name:'新聞系統', desc:'天氣·折扣·事件'},
+        { icon:'💜', name:'隊友系統', desc:'屬性·好感·路線'},
+        { icon:'💬', name:'戀愛系統', desc:'對話選擇·結局分歧'},
+      ];
+      sysEl.innerHTML = systems.map(s => `
+        <div class="system-item">
+          <span class="system-icon">${s.icon}</span>
+          <span class="system-name">${s.name}</span>
+          <span class="system-desc">${s.desc}</span>
+        </div>`).join('');
+    }
+
+    // Story Timeline
+    const tlEl = document.getElementById('story-timeline');
+    if (tlEl) {
+      const phases = [
+        { days:'Day 1 – 21', name:'共通路線', tag:'common', dot:'active',
+          desc:'建立店鋪基礎，結識雙角色，處理日常維修訂單' },
+        { days:'Day 21 – 24', name:'分歧路線', tag:'common',
+          desc:'根據玩家選擇決定情感傾向的隊友' },
+        { days:'Day 24 – 28', name:'Xavier 路線', tag:'xavier',
+          desc:'異端審判官線·秘密與秩序的守護者' },
+        { days:'Day 24 – 28', name:'萊卡翁路線', tag:'lycaon',
+          desc:'改造逃亡者線·野獸的忠誠與救贖' },
+      ];
+      tlEl.innerHTML = `<div class="tl-track">${phases.map(p => `
+        <div class="tl-node">
+          <div class="tl-dot ${p.dot||'pending'}"></div>
+          <div class="tl-content">
+            <div class="tl-days">${p.days}</div>
+            <div class="tl-name">${p.name}</div>
+            <span class="tl-route-tag tl-tag-${p.tag}">${p.tag==='common'?'共通':p.tag==='xavier'?'澤維爾':'萊卡翁'}路線</span>
+          </div>
+        </div>`).join('')}</div>`;
+    }
+
+    // Character Routes
+    const crEl = document.getElementById('char-routes');
+    if (crEl) {
+      const chars = meta.characters || [];
+      crEl.innerHTML = chars.map(c => `
+        <div class="char-route-card">
+          <div class="char-route-avatar char-avatar-${c.id}">${c.id==='xavier'?'⚖':'🐺'}</div>
+          <div class="char-route-info">
+            <div class="char-route-name">${c.name_zh} · ${c.name_en}</div>
+            <div class="char-route-role">${c.role}</div>
+            <div class="char-route-tags">${(c.tags||[]).map(t => `<span class="char-tag char-tag-${c.id}">${t}</span>`).join('')}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    // World Cards
+    const wcEl = document.getElementById('world-cards');
+    if (wcEl) {
+      wcEl.innerHTML = (meta.world_timeline||[]).map(w => `
+        <div class="world-card">
+          <div class="world-card-year">${w.year}</div>
+          <div class="world-card-title">${w.title}</div>
+          <div class="world-card-desc">${w.desc}</div>
+        </div>`).join('');
+    }
+
+    // Sidebar phase indicator
+    const activePhase = meta.phases.find(p => p.status === 'active');
+    const phaseNameEl = document.getElementById('current-phase-name');
+    const phaseFillEl = document.getElementById('phase-progress-fill');
+    if (phaseNameEl && activePhase) phaseNameEl.textContent = activePhase.name;
+    if (phaseFillEl && activePhase) phaseFillEl.style.width = activePhase.progress + '%';
   }
 
   // ── RENDER: Backlog ──
@@ -381,7 +420,7 @@
 
   function addRecord(type, template) {
     if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
-    const t = type || state.editTarget?.type || state.backlogTab;
+    const t = type || state.editTarget?.type || 'orders';
     const allData = { orders: GameData.orders, events: GameData.events, items: GameData.items, emails: GameData.emails, news: GameData.news, notes: GameData.notes };
     const pool = allData[t];
     if (!pool || pool.length === 0) { toast('無法新增：無範本資料', 'error'); return; }
@@ -667,23 +706,8 @@
       btn.addEventListener('click', () => switchView(btn.dataset.view));
     });
 
-    // Backlog tabs
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.backlogTab = btn.dataset.tab;
-        renderBacklog();
-      });
-    });
-
     // Keyboard shortcuts
     document.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        switchView('backlog');
-        document.getElementById('backlog-search').focus();
-      }
       if (e.key === 'Escape' && !document.getElementById('edit-overlay').classList.contains('hidden')) {
         editCancel();
       }

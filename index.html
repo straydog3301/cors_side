@@ -35,10 +35,6 @@
         <button class="nav-item active" data-view="dashboard">
           <span class="nav-icon">📊</span> Dashboard
         </button>
-        <button class="nav-item" data-view="backlog">
-          <span class="nav-icon">📋</span> Backlog
-          <span class="nav-badge" id="badge-backlog">0</span>
-        </button>
         <button class="nav-item" data-view="characters">
           <span class="nav-icon">👤</span> 角色
         </button>
@@ -102,70 +98,53 @@
 
       <!-- ═══ DASHBOARD ═══ -->
       <section class="view active" id="view-dashboard">
-        <div class="dashboard-grid">
+        <div class="dash-root">
 
-          <!-- Stats row -->
-          <div class="dash-stats" id="dash-stats"></div>
+          <!-- LEFT COLUMN -->
+          <div class="dash-col-left">
 
-          <!-- Phase progress -->
-          <div class="dash-panel phase-panel">
-            <div class="panel-header">
-              <h3>開發階段</h3>
-              <button class="btn-sm" onclick="window.app.scrollToEdit('phases')">編輯</button>
+            <!-- Game Hero -->
+            <div class="dash-hero" id="dash-hero"></div>
+
+            <!-- Phase Progress -->
+            <div class="dash-panel">
+              <div class="panel-header"><h3>開發階段</h3></div>
+              <div class="phases-list" id="phases-list"></div>
             </div>
-            <div class="phases-list" id="phases-list"></div>
+
+            <!-- Key Stats -->
+            <div class="dash-stats" id="dash-stats"></div>
+
+            <!-- Core Systems -->
+            <div class="dash-panel">
+              <div class="panel-header"><h3>核心系統</h3></div>
+              <div class="systems-list" id="systems-list"></div>
+            </div>
           </div>
 
-          <!-- Recent orders -->
-          <div class="dash-panel">
-            <div class="panel-header">
-              <h3>最新維修訂單 <span class="count-badge" id="order-count"></span></h3>
-              <button class="btn-sm" onclick="window.app.switchView('backlog')">查看全部</button>
+          <!-- RIGHT COLUMN -->
+          <div class="dash-col-right">
+
+            <!-- Story Timeline -->
+            <div class="dash-panel">
+              <div class="panel-header"><h3>故事時間線</h3></div>
+              <div class="story-timeline" id="story-timeline"></div>
             </div>
-            <div class="order-list" id="dash-orders"></div>
-          </div>
 
-          <!-- Recent events -->
-          <div class="dash-panel">
-            <div class="panel-header">
-              <h3>時間事件 <span class="count-badge" id="event-count"></span></h3>
+            <!-- Character Routes -->
+            <div class="dash-panel">
+              <div class="panel-header"><h3>戀愛路線</h3></div>
+              <div class="char-routes" id="char-routes"></div>
             </div>
-            <div class="event-list" id="dash-events"></div>
-          </div>
 
-          <!-- Items preview -->
-          <div class="dash-panel">
-            <div class="panel-header">
-              <h3>道具 <span class="count-badge" id="item-count"></span></h3>
+            <!-- World Cards -->
+            <div class="dash-panel">
+              <div class="panel-header"><h3>世界觀</h3></div>
+              <div class="world-cards" id="world-cards"></div>
             </div>
-            <div class="item-list" id="dash-items"></div>
-          </div>
 
-          <!-- Emails preview -->
-          <div class="dash-panel">
-            <div class="panel-header">
-              <h3>郵件 <span class="count-badge" id="email-count"></span></h3>
-            </div>
-            <div class="email-list" id="dash-emails"></div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- ═══ BACKLOG ═══ -->
-      <section class="view" id="view-backlog">
-        <div class="backlog-tabs">
-          <button class="tab-btn active" data-tab="orders">維修訂單</button>
-          <button class="tab-btn" data-tab="events">時間事件</button>
-          <button class="tab-btn" data-tab="items">道具</button>
-          <button class="tab-btn" data-tab="emails">郵件</button>
-          <button class="tab-btn" data-tab="news">新聞</button>
-          <div class="tab-search">
-            <input type="text" id="backlog-search" placeholder="搜尋... (Ctrl+K)" oninput="window.app.filterBacklog(this.value)">
           </div>
         </div>
-        <div class="backlog-info" id="backlog-info" style="display:flex;align-items:center;gap:8px;padding:0 16px;min-height:32px"></div>
-        <div class="backlog-content" id="backlog-content"></div>
       </section>
 
       <!-- ═══ CHARACTERS ═══ -->
