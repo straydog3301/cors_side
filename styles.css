@@ -459,6 +459,25 @@ input, textarea { font-family: var(--font-main); }
 @media (max-width: 900px) {
   .dash-root { grid-template-columns: 1fr; }
 }
+@media (max-width: 768px) {
+  #sidebar { display: none; }
+  #main-content { margin-left: 0; }
+  #views { padding: 12px; }
+  .topbar-left .view-title { font-size: 0.85rem; }
+  .topbar-right { gap: 4px; }
+  .btn-icon { width: 30px; height: 30px; font-size: 0.75rem; }
+  .dash-stat-card { padding: 10px; }
+  .dash-stat-num { font-size: 1.2rem; }
+  .dash-hero { padding: 16px; }
+  .dash-hero-title { font-size: 1.1rem; }
+  .endings-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  #views { padding: 8px; }
+  .dash-root { gap: 12px; }
+  .dash-stats { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+  .settings-panel { padding: 16px; }
+}
 
 /* ════════════════════════════════════════════════════
    BACKLOG
@@ -749,6 +768,12 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--cyan); c
   transition: var(--transition);
 }
 .block-content-input:focus { border-color: var(--cyan); }
+.block-select-input {
+  cursor: pointer; appearance: auto; -webkit-appearance: menulist;
+  background: var(--dark-bg); color: var(--text);
+  padding: 8px 24px 8px 12px;
+  min-height: 40px;
+}
 .block-delete {
   background: none; border: none; color: var(--muted);
   font-size: 0.8rem; cursor: pointer; padding: 4px 8px;

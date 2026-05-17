@@ -427,15 +427,31 @@
     fname.textContent = `${type} / ${data.orderID || data.id || data._file || data.name || ''}`;
 
     // Build block editor
+    // Known enum fields with their options
+    const enumFields = {
+      status: ['done', 'active', 'pending'],
+      tag: ['common', 'xavier', 'lycaon', 'secret'],
+      branch: ['common', 'xavier', 'lycaon', 'secret'],
+      route: ['common', 'xavier', 'lycaon', 'secret', 'XAVIER_ROUTE', 'LYCAON_ROUTE'],
+    };
+    const arrayFields = new Set(['tags', 'badges']);
     const fields = Object.entries(data).filter(([k]) => !k.startsWith('_'));
+    const renderField = (k, v) => {
+      const isEnum = enumFields[k];
+      const isArr = arrayFields.has(k);
+      const val = isArr && Array.isArray(v) ? v.join(', ') : v;
+      const inputHtml = isEnum
+        ? `<select class="block-content-input block-select-input" data-field="${k}" onchange="app.markDirty()">${isEnum.map(opt => `<option value="${opt}"${val===opt?' selected':''}>${opt === 'done'?'已完成':opt === 'active'?'進行中':opt === 'pending'?'待開始':opt === 'common'?'共通':opt === 'xavier'?'澤維爾':opt === 'lycaon'?'萊卡翁':opt === 'secret'?'隱藏':opt}</option>`).join('')}</select>`
+        : `<textarea class="block-content-input" data-field="${k}" rows="${String(val).length > 80 ? 3 : 1}" oninput="app.markDirty()">${val}</textarea>`;
+      return `
+        <div class="block-row">
+          <input class="block-type-select" value="${k}" readonly style="width:120px" title="欄位名（唯讀）">
+          ${inputHtml}
+        </div>`;
+    };
     body.innerHTML = `
       <div class="block-editor">
-        ${fields.map(([k, v]) => `
-          <div class="block-row">
-            <input class="block-type-select" value="${k}" readonly style="width:120px" title="欄位名（唯讀）">
-            <textarea class="block-content-input" data-field="${k}" rows="${String(v).length > 80 ? 3 : 1}"
-              oninput="app.markDirty()">${v}</textarea>
-          </div>`).join('')}
+        ${fields.map(([k, v]) => renderField(k, v)).join('')}
         <div class="block-add-row" style="display:flex;gap:8px;margin-top:16px;align-items:center">
           <button class="btn-primary btn-sm" onclick="app.showJsonEditor()" style="margin-right:auto">{} JSON 模式</button>
           <button class="btn-danger btn-sm" onclick="app.deleteCurrentRecord()">🗑️ 刪除此筆</button>
@@ -542,9 +558,16 @@
         if (typeof orig === 'number') {
           val = Number(val);
         }
-        // Auto-convert tags field: "tag1, tag2, tag3" → ["tag1","tag2","tag3"]
-        if (field === 'tags' && typeof val === 'string' && val.trim()) {
+// Auto-convert array fields: "tag1, tag2" → ["tag1","tag2"]
+        const arrayFields = ['tags', 'badges'];
+        if (arrayFields.includes(field) && typeof val === 'string' && val.trim()) {
           val = val.split(',').map(t => t.trim()).filter(Boolean);
+        }
+        // Also auto-convert if value looks numeric and field expects number
+        if (typeof val === 'string' && /^[0-9]+(\.[0-9]+)?$/.test(val.trim()) && typeof orig === 'number') {
+          val = Number(val.trim());
+        } else if (typeof val === 'string' && /^[0-9]+(\.[0-9]+)?$/.test(val.trim()) && field === 'progress') {
+          val = Number(val.trim());
         }
         state.editData[field] = val;
       });
@@ -566,9 +589,9 @@
     if (type === 'orders') { const arr = GameData.orders; const idx = arr.findIndex(o => o._file === id); if (idx >= 0) GameData.orders = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
     else if (type === 'events') { const arr = GameData.events; const idx = arr.findIndex(e => e._file === id); if (idx >= 0) GameData.events = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
     else if (type === 'items') { const arr = GameData.items; const idx = arr.findIndex(i => i._file === id); if (idx >= 0) GameData.items = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
-    else if (type === 'emails') { const arr = GameData.emails; const idx = arr.findIndex(e => e._file === id); if (idx >= 0) GameData.emails = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
+    else if (type === 'emails') { const arr = GameData.emails; const idx = arr.findIndex(e => e.id === id); if (idx >= 0) GameData.emails = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
     else if (type === 'notes') { const arr = GameData.notes; const idx = arr.findIndex(n => n.id === id); if (idx >= 0) GameData.notes = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
-    else if (type === 'news') { const arr = GameData.news; const idx = arr.findIndex(n => n._file === id); if (idx >= 0) GameData.news = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
+    else if (type === 'news') { const arr = GameData.news; const idx = arr.findIndex(n => n.id === id); if (idx >= 0) GameData.news = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
     else if (type === 'characters') {
       const chars = GameData.meta.characters;
       const idx = chars.findIndex(c => c.id === id);
@@ -626,21 +649,24 @@
 
   function editStatKey(key) {
     if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
-    const action = confirm(`編輯「${key}」？\n確定 = 修改名稱\n取消 = 刪除此項`) ? 'edit' : 'delete';
+    const action = confirm(`編輯「${key}」？\n確定 = 修改名稱與數值\n取消 = 刪除此項`) ? 'edit' : 'delete';
     if (action === 'delete') {
       return deleteStatKey(key);
     }
     const stats = GameData.meta.stats || {};
-    const newKey = prompt('統計項目標籤名稱：', key);
-    if (!newKey || newKey === key) return;
-    const val = stats[key];
+    const newKey = prompt('新標籤名稱（留空不變）：', key);
+    if (newKey === null) return;
+    const finalKey = newKey || key;
+    const val = prompt('數值：', stats[key]);
+    if (val === null) return;
     const newStats = {...stats};
     delete newStats[key];
-    newStats[newKey] = val;
+    newStats[finalKey] = val;
     GameData.meta = {...GameData.meta, stats: newStats};
     markDirty();
+    saveToLocalStorage();
     renderDashboard();
-    toast(`統計項目 "${key}" → "${newKey}"`, 'success');
+    toast(`統計項目已更新：${finalKey} = ${val}`, 'success');
   }
 
   function addStat() {
@@ -699,7 +725,7 @@
     else if (type === 'events') { GameData.events = GameData.events.filter(e => e._file !== id); }
     else if (type === 'items') { GameData.items = GameData.items.filter(i => i._file !== id); }
     else if (type === 'emails') { GameData.emails = GameData.emails.filter(e => e.id !== id); }
-    else if (type === 'news') { GameData.news = GameData.news.filter(n => n._file !== id); }
+    else if (type === 'news') { GameData.news = GameData.news.filter(n => n.id !== id); }
     else if (type === 'notes') { GameData.notes = GameData.notes.filter(n => n.id !== id); }
     else if (type === 'characters') { GameData.meta = {...GameData.meta, characters: GameData.meta.characters.filter(c => c.id !== id)}; }
     else if (type === 'systems') { GameData.meta = {...GameData.meta, systems: GameData.meta.systems.filter(s => s.id !== id)}; }
@@ -805,6 +831,14 @@
       '.nojekyll': '',  // empty file ensures GitHub Pages doesn't run Jekyll
     };
     try {
+      // Also push static frontend files so dev panel code changes go live too
+      const staticFiles = ['index.html', 'app.js', 'styles.css', 'data.js'];
+      for (const f of staticFiles) {
+        try {
+          const resp = await fetch(f);
+          if (resp.ok) fileContents[f] = await resp.text();
+        } catch(e) { /* skip if fetch fails */ }
+      }
       statusEl.textContent = '建立 blob...';
       // Step 1: Create blobs for all files
       const blobs = {};
@@ -884,6 +918,28 @@
     }
   }
 
+  async function loadFromGithubSilent() {
+    // Same as loadFromGithub but without toast/status — used for auto-pull on init
+    const repo = document.getElementById('setting-repo')?.value || 'straydog3301/cors_side';
+    const files = ['orders','events','items','emails','news','notes','meta'];
+    let loaded = 0;
+    for (const name of files) {
+      try {
+        const file = await fetch(`https://api.github.com/repos/${repo}/contents/content/${name}.json`, { headers: API.headers(state.githubToken) });
+        if (!file.ok) continue;
+        const json = await file.json();
+        const content = base64Utf8Decode(json.content);
+        const data = JSON.parse(content);
+        GameData[name === 'meta' ? 'meta' : name] = data;
+        loaded++;
+      } catch(e) { /* skip */ }
+    }
+    if (loaded > 0) {
+      saveToLocalStorage();
+      renderCurrentView();
+    }
+  }
+
   function base64Utf8Decode(b64) {
     // atob is not safe for UTF-8 Chinese characters.
     const binStr = atob(b64.replace(/\n/g, ''));
@@ -958,6 +1014,8 @@
             document.getElementById('user-avatar').textContent = user.login.substring(0,2).toUpperCase();
             document.getElementById('user-name').textContent = user.login;
             document.getElementById('user-status').textContent = 'GitHub 已連接';
+            // Auto-pull latest content from GitHub after connecting
+            loadFromGithubSilent();
           }
         }).catch(() => {});
     }
