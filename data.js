@@ -1,36 +1,14 @@
-// Auto-generated — do not edit manually
+// data.js — CORS Game Data (auto-generated, UTF-8 clean)
+// Managed via CORS Dev Panel; edits to content/*.json are preferred.
 
-const GameData = (() => {
-  const orders = [
+const GameData = (function() {
+  const _base = {
+    orders: [
   {
     "_file": "Day1_01.asset",
     "_type": "CyberOccult.Data.OrderData",
     "orderID": "D1_01",
     "clientName": "機械和尚",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Day1_02.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "D1_02",
-    "clientName": "機械和尚未完成",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Day1_03.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "D1_03",
-    "clientName": "機械和尚未完成",
     "rewardAmount": "20",
     "durationHours": "2",
     "staminaCost": "0",
@@ -73,93 +51,9 @@ const GameData = (() => {
     "pathWidth": "0.5",
     "isPathMoving": "0",
     "timeLimit": "90"
-  },
-  {
-    "_file": "Tier1_001.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "T1_001",
-    "clientName": "測試訂單T1_001",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Tier1_002.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "T1_002",
-    "clientName": "測試訂單T1_002",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Tier1_003.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "T1_003",
-    "clientName": "測試訂單T1_003",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Tier1_005.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "T1_005",
-    "clientName": "測試訂單T1_005",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Tier1_006.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "T1_006",
-    "clientName": "測試訂單T1_006",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "TOrder_001.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "Test_001",
-    "clientName": "測試用訂單",
-    "rewardAmount": "0",
-    "durationHours": "0",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "0"
-  },
-  {
-    "_file": "TOrder_002.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "Test_002",
-    "clientName": "測試用訂單",
-    "rewardAmount": "0",
-    "durationHours": "0",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "0"
   }
-];
-  const events = [
+],
+    events: [
   {
     "_file": "Day1.asset",
     "_type": "CyberOccult.Data.TimeEventData",
@@ -211,55 +105,29 @@ const GameData = (() => {
     "type": "1",
     "targetId": "Story/Day2_3",
     "oneTimeOnly": "0"
-  },
-  {
-    "_file": "TestEvent_001.asset",
-    "_type": "CyberOccult.Data.TimeEventData",
-    "id": "TestEvent_001",
-    "startDay": "1",
-    "endDay": "1",
-    "startHour": "9",
-    "endHour": "24",
-    "locationId": "Office",
-    "type": "1",
-    "targetId": "Story/Day1",
-    "oneTimeOnly": "0"
-  },
-  {
-    "_file": "TestEvent_002.asset",
-    "_type": "CyberOccult.Data.TimeEventData",
-    "id": "TestEvent_002",
-    "startDay": "1",
-    "endDay": "1",
-    "startHour": "9",
-    "endHour": "24",
-    "locationId": "Office",
-    "type": "1",
-    "targetId": "Story/Day1",
-    "oneTimeOnly": "0"
   }
-];
-  const items = [
+],
+    items: [
   {
     "_file": "Key_001.asset",
     "_type": "CyberOccult.Data.ItemData",
     "id": "Key_001",
     "itemName": "損壞的硬碟",
-    "description": "測試道具.萊卡翁在虛擬廢墟A區找到的硬碟",
+    "description": "萊卡翁在虛擬廢墟A區找到的損壞硬碟，可能藏有企業機密數據。",
     "price": "0",
     "type": "3",
     "effectType": "0",
     "effectValue": "0",
     "unlockDay": "1",
     "expireDay": "999",
-    "isUnique": "0"
+    "isUnique": "1"
   },
   {
     "_file": "Tool_001.asset",
     "_type": "CyberOccult.Data.ItemData",
     "id": "Tool_001",
-    "itemName": "工具001",
-    "description": "測試工具",
+    "itemName": "基礎焊接工具",
+    "description": "標準維修用焊接筆，適用於大部分電路板維修。",
     "price": "200",
     "type": "0",
     "effectType": "0",
@@ -272,76 +140,64 @@ const GameData = (() => {
     "_file": "Tool_005.asset",
     "_type": "CyberOccult.Data.ItemData",
     "id": "Tool_005",
-    "itemName": "工具005",
-    "description": "測試工具005",
+    "itemName": "奈米探針套件",
+    "description": "高精度維修工具，可處理微米級電路故障。",
     "price": "500",
     "type": "0",
+    "effectType": "0",
+    "effectValue": "0",
+    "unlockDay": "3",
+    "expireDay": "999",
+    "isUnique": "0"
+  },
+  {
+    "_file": "Consumable_001.asset",
+    "_type": "CyberOccult.Data.ItemData",
+    "id": "c_001",
+    "itemName": "冷卻凝膠",
+    "description": "一次性散熱凝膠，維修時降低元件過熱風險。",
+    "price": "80",
+    "type": "1",
+    "effectType": "1",
+    "effectValue": "15",
+    "unlockDay": "1",
+    "expireDay": "999",
+    "isUnique": "0"
+  },
+  {
+    "_file": "Material_001.asset",
+    "_type": "CyberOccult.Data.ItemData",
+    "id": "m_001",
+    "itemName": "回收電路板",
+    "description": "從廢料場回收的通用電路板，可用於維修或改造。",
+    "price": "40",
+    "type": "2",
     "effectType": "0",
     "effectValue": "0",
     "unlockDay": "1",
     "expireDay": "999",
     "isUnique": "0"
   }
-];
-  const emails = [
+],
+    emails: [
   {
     "_file": "Mail_001.asset",
     "_type": "CyberOccult.Data.EmailData",
     "id": "Mail_001",
-    "sender": "寄件人",
-    "subject": "緊急委託",
-    "content": "測試Mail"
+    "sender": "地下區物流中心",
+    "subject": "零件配送通知",
+    "content": "您訂購的維修零件將於今日送達靈樞堂，請注意查收。"
   },
   {
     "_file": "Mail_002.asset",
     "_type": "CyberOccult.Data.EmailData",
     "id": "Mail_002",
-    "sender": "寄件人",
-    "subject": "標題002",
-    "content": "內容002"
-  },
-  {
-    "_file": "Tier1_001.asset",
-    "_type": "CyberOccult.Data.EmailData",
-    "id": "T1Mail_001",
-    "sender": "寄件人",
-    "subject": "主題001",
-    "content": "內容001"
-  },
-  {
-    "_file": "Tier1_002.asset",
-    "_type": "CyberOccult.Data.EmailData",
-    "id": "T1Mail_002",
-    "sender": "寄件人",
-    "subject": "主題002",
-    "content": "內容002"
-  },
-  {
-    "_file": "Tier1_003.asset",
-    "_type": "CyberOccult.Data.EmailData",
-    "id": "T1Mail_003",
-    "sender": "寄件人",
-    "subject": "主題003",
-    "content": "內容003"
-  },
-  {
-    "_file": "Tier1_005.asset",
-    "_type": "CyberOccult.Data.EmailData",
-    "id": "T1Mail_005",
-    "sender": "寄件人",
-    "subject": "主題005",
-    "content": "內容005"
-  },
-  {
-    "_file": "Tier1_006.asset",
-    "_type": "CyberOccult.Data.EmailData",
-    "id": "T1Mail_006",
-    "sender": "寄件人",
-    "subject": "主題006",
-    "content": "內容006"
+    "sender": "匿名委託人",
+    "subject": "加密委託 — 閱後即焚",
+    "content": "我有一個特殊設備需要修理，報酬從優。明日下午三時，老地方見。"
   }
-];
-  const news = [
+],
+    news: [
   {
     "_file": "Clear.asset",
     "_type": "CyberOccult.Data.NewsItemData",
@@ -392,8 +248,8 @@ const GameData = (() => {
     "priority": "6",
     "minDay": "1"
   }
-];
-  const meta = {
+],
+    meta: {
   "title": "靈樞堂 Cyber-Occult Repair Shop",
   "tagline_zh": "被詛咒的電子產品維修專家",
   "tagline_en": "Fixing the Cursed. Unlocking the Truth.",
@@ -562,37 +418,61 @@ const GameData = (() => {
       ]
     }
   ]
-};
-  const notes = [
+},
+    notes: [
   {
     "id": "n1",
     "title": "開發原則",
     "content": "MVP 優先 → 垂直切片 → 內容填充。拒絕完美主義，先讓功能動起來再讓它好看。",
-    "tags": [
-      "原則"
-    ],
+    "tags": ["原則"],
     "updated": "2024-01-15"
   },
   {
     "id": "n2",
     "title": "維修系統 faultPoints 格式",
     "content": "faultPoints 是 Vector2[]，儲存相對於維修區域原點的座標。路徑為封閉曲線，請用絕對座標。",
-    "tags": [
-      "技術",
-      "維修"
-    ],
+    "tags": ["技術", "維修"],
     "updated": "2024-02-20"
   },
   {
     "id": "n3",
     "title": "派遣系統 TU 計算公式",
     "content": "TUCost = BaseTUCost + (NodeDifficulty - CharStat) / ScalingFactor。設計 difficultySTR 時請對照角色基礎屬性，確保普通節點消耗 1~2 TU，困難節點消耗 3~5 TU。",
-    "tags": [
-      "數值",
-      "派遣"
-    ],
+    "tags": ["數值", "派遣"],
     "updated": "2024-03-01"
   }
-];
-  return { orders, events, items, emails, news, meta, notes };
+]
+  };
+
+  // Overrides applied on top of defaults (set by edit mode)
+  var _overrides = {};
+
+  return {
+    get orders() { return _overrides.orders || _base.orders; },
+    get events() { return _overrides.events || _base.events; },
+    get items() { return _overrides.items || _base.items; },
+    get emails() { return _overrides.emails || _base.emails; },
+    get news() { return _overrides.news || _base.news; },
+    get meta() { return _overrides.meta || _base.meta; },
+    get notes() { return _overrides.notes || _base.notes; },
+    set orders(v) { _overrides.orders = v; },
+    set events(v) { _overrides.events = v; },
+    set items(v) { _overrides.items = v; },
+    set emails(v) { _overrides.emails = v; },
+    set news(v) { _overrides.news = v; },
+    set meta(v) { _overrides.meta = v; },
+    set notes(v) { _overrides.notes = v; },
+    reset() { _overrides = {}; },
+    exportAll() {
+      return {
+        orders: this.orders,
+        events: this.events,
+        items: this.items,
+        emails: this.emails,
+        news: this.news,
+        meta: this.meta,
+        notes: this.notes
+      };
+    }
+  };
 })();

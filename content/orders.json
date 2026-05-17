@@ -12,30 +12,6 @@
     "timeLimit": "30"
   },
   {
-    "_file": "Day1_02.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "D1_02",
-    "clientName": "機械和尚未完成",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Day1_03.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "D1_03",
-    "clientName": "機械和尚未完成",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
     "_file": "Order_001.asset",
     "_type": "CyberOccult.Data.OrderData",
     "orderID": "Rand_001",
@@ -70,89 +46,5 @@
     "pathWidth": "0.5",
     "isPathMoving": "0",
     "timeLimit": "90"
-  },
-  {
-    "_file": "Tier1_001.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "T1_001",
-    "clientName": "測試訂單T1_001",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Tier1_002.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "T1_002",
-    "clientName": "測試訂單T1_002",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Tier1_003.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "T1_003",
-    "clientName": "測試訂單T1_003",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Tier1_005.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "T1_005",
-    "clientName": "測試訂單T1_005",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "Tier1_006.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "T1_006",
-    "clientName": "測試訂單T1_006",
-    "rewardAmount": "20",
-    "durationHours": "2",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "30"
-  },
-  {
-    "_file": "TOrder_001.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "Test_001",
-    "clientName": "測試用訂單",
-    "rewardAmount": "0",
-    "durationHours": "0",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "0"
-  },
-  {
-    "_file": "TOrder_002.asset",
-    "_type": "CyberOccult.Data.OrderData",
-    "orderID": "Test_002",
-    "clientName": "測試用訂單",
-    "rewardAmount": "0",
-    "durationHours": "0",
-    "staminaCost": "0",
-    "pathWidth": "0.5",
-    "isPathMoving": "0",
-    "timeLimit": "0"
   }
 ]

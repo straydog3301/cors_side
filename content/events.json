@@ -10,7 +10,7 @@
     "locationId": "Office",
     "type": "1",
     "targetId": "Story/Day1",
-    "oneTimeOnly": "0"
+    "oneTimeOnly": "1"
   },
   {
     "_file": "Day2_1.asset",
@@ -23,7 +23,7 @@
     "locationId": "Office",
     "type": "1",
     "targetId": "Story/Day2_1",
-    "oneTimeOnly": "0"
+    "oneTimeOnly": "1"
   },
   {
     "_file": "Day2_2.asset",
@@ -36,7 +36,7 @@
     "locationId": "Office",
     "type": "1",
     "targetId": "Story/Day2_2",
-    "oneTimeOnly": "0"
+    "oneTimeOnly": "1"
   },
   {
     "_file": "Day2_3.asset",
@@ -49,32 +49,6 @@
     "locationId": "Office",
     "type": "1",
     "targetId": "Story/Day2_3",
-    "oneTimeOnly": "0"
-  },
-  {
-    "_file": "TestEvent_001.asset",
-    "_type": "CyberOccult.Data.TimeEventData",
-    "id": "TestEvent_001",
-    "startDay": "1",
-    "endDay": "1",
-    "startHour": "9",
-    "endHour": "24",
-    "locationId": "Office",
-    "type": "1",
-    "targetId": "Story/Day1",
-    "oneTimeOnly": "0"
-  },
-  {
-    "_file": "TestEvent_002.asset",
-    "_type": "CyberOccult.Data.TimeEventData",
-    "id": "TestEvent_002",
-    "startDay": "1",
-    "endDay": "1",
-    "startHour": "9",
-    "endHour": "24",
-    "locationId": "Office",
-    "type": "1",
-    "targetId": "Story/Day1",
-    "oneTimeOnly": "0"
+    "oneTimeOnly": "1"
   }
 ]

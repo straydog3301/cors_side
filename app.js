@@ -16,6 +16,8 @@
     autosave: localStorage.getItem('cors_autosave') !== 'false',
     showIds: localStorage.getItem('cors_show_ids') === 'true',
     localModified: false,
+    backlogTab: 'orders',
+    backlogFilter: '',
   };
 
   // ── GitHub API helpers ──
@@ -325,11 +327,18 @@
 
   // ── EDIT MODE ──
   function toggleEdit() {
-    if (!state.editPassword && !state.isEditMode) {
-      const pw = prompt('請輸入編輯密碼（首次設定於 設定 頁面）：');
-      if (!pw) return;
-      if (state.editPassword && pw !== state.editPassword) { toast('密碼錯誤', 'error'); return; }
-      if (!state.editPassword) { toast('尚無設定密碼，請至 設定 頁面設定', 'info'); state.isEditMode = true; }
+    if (!state.isEditMode) {
+      if (state.editPassword) {
+        const pw = prompt('請輸入編輯密碼：');
+        if (!pw) return;
+        if (pw !== state.editPassword) { toast('密碼錯誤', 'error'); return; }
+      } else {
+        const pw = prompt('首次進入編輯模式，請設定編輯密碼（或留空跳過）：');
+        if (pw) {
+          state.editPassword = pw;
+          localStorage.setItem('cors_edit_password', pw);
+        }
+      }
     }
     state.isEditMode = !state.isEditMode;
     const icon = document.getElementById('edit-btn-icon');
@@ -502,8 +511,7 @@
     document.getElementById('edit-overlay').classList.add('hidden');
     toast('已儲存（本地）', 'success');
 
-    saveToLocalStorage(); // always persist so refresh doesn't lose edits
-    if (state.autosave) saveToLocalStorage();
+    saveToLocalStorage();
     renderCurrentView();
   }
 
@@ -561,8 +569,7 @@
   async function connectGithub() {
     const token = document.getElementById('setting-gh-token').value;
     if (!token) { toast('請輸入 GitHub Token', 'error'); return; }
-    state.githubToken = token;
-    localStorage.setItem('cors_gh_token', token);
+    // saveToken() already wrote to localStorage via onchange handler
     try {
       const r = await fetch('https://api.github.com/user', { headers: API.headers(token) });
       if (!r.ok) throw new Error(r.status);
@@ -592,6 +599,7 @@
       'content/news.json': JSON.stringify(data.news, null, 2),
       'content/notes.json': JSON.stringify(data.notes, null, 2),
       'content/meta.json': JSON.stringify(data.meta, null, 2),
+      '.nojekyll': '',  // empty file ensures GitHub Pages doesn't run Jekyll
     };
     try {
       statusEl.textContent = '建立 blob...';
@@ -648,8 +656,8 @@
         headers: API.headers(state.githubToken),
         body: JSON.stringify({ sha: newCommit.sha, force: false })
       }).then(r => { if (!r.ok) throw new Error(`Ref update failed: ${r.status}`); return r.json(); });
-      statusEl.innerHTML = `<span style="color:var(--success)">✓ 已推送全部 7 個檔案（1 次 commit）</span>`;
-      toast('已推送 7 個檔案至 GitHub（1 次 commit）', 'success');
+      statusEl.innerHTML = `<span style="color:var(--success)">✓ 已推送全部 ${Object.keys(fileContents).length} 個檔案（1 次 commit）</span>`;
+      toast(`已推送 ${Object.keys(fileContents).length} 個檔案至 GitHub（1 次 commit）`, 'success');
     } catch(e) {
       console.error('Push error:', e);
       statusEl.innerHTML = `<span style="color:var(--danger)">⚠ 推送失敗：${e.message}</span>`;

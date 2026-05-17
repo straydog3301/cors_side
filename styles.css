@@ -24,6 +24,8 @@
   --font-main:  'Noto Sans TC', sans-serif;
   --font-mono:  'Share Tech Mono', monospace;
   --font-title: 'Orbitron', sans-serif;
+  --white:      #f0f0ff;
+  --card:       #111128;
   --sidebar-w: 240px;
   --topbar-h: 56px;
   --radius: 4px;
