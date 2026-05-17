@@ -982,10 +982,19 @@
           }
           return rec;
         }).filter(r => {
-          // Skip records where the ID field (second column, B) is empty
-          const idField = fieldNames[1]; // B column after _rowNote
+          // Skip records where ALL fields are empty/null/undefined
+          // (also skip if the primary ID field — the first non-_rowNote field — is empty)
+          const entries = Object.entries(r);
+          if (entries.length === 0) return false;
+          const idField = fieldNames[1]; // B column
           const idVal = r[idField];
-          return idVal !== '' && idVal !== null && idVal !== undefined;
+          // If the ID field itself is empty, skip
+          if (idVal === '' || idVal === null || idVal === undefined) return false;
+          // Also skip if every single value is empty/null/undefined/false/0
+          const allEmpty = entries.every(([k, v]) =>
+            v === '' || v === null || v === undefined || v === false || v === 0
+          );
+          return !allEmpty;
         });
         allData[name] = records;
       }
