@@ -643,3 +643,26 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--cyan); c
 .text-cyan { color: var(--cyan); }
 .text-muted { color: var(--muted); }
 .text-mono { font-family: var(--font-mono); }
+/* ── Database view ── */
+.database-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.database-header h2 {
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  color: var(--text);
+  letter-spacing: 1px;
+  margin: 0;
+}
+.db-sheet-name {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  flex: 1;
+}
