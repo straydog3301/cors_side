@@ -4,7 +4,7 @@
 (function() {
   'use strict';
 
-  // ── State ──
+// ── State ──
   const state = {
     currentView: 'dashboard',
     isEditMode: false,
@@ -18,6 +18,7 @@
     localModified: false,
     backlogTab: 'orders',
     backlogFilter: '',
+    worldFilter: '',       // world view search filter
   };
 
   // ── GitHub API helpers ──
@@ -271,11 +272,17 @@
     renderBacklog();
   }
 
+  function filterWorld(q) {
+    state.worldFilter = q;
+    renderWorld();
+  }
+
   // ── RENDER: Characters ──
   function renderCharacters() {
     const chars = GameData.meta.characters;
     const el = document.getElementById('chars-layout');
-    el.innerHTML = chars.map(c => `
+    const editHeader = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addCharacter()">+ 新增角色</button></div>` : '';
+    el.innerHTML = editHeader + chars.map(c => `
       <div class="char-page-card">
         <div class="char-page-header">
           <div class="char-avatar ${c.id}">${c.id === 'xavier' ? '⚖️' : '🦊'}</div>
@@ -300,12 +307,24 @@
     const tl = GameData.meta.world_timeline;
     const stl = GameData.meta.story_timeline;
     const endings = GameData.meta.endings;
+    const filterQ = (state.worldFilter || '').toLowerCase();
 
     const editBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addWorldEvent()">+ 新增時間點</button></div>` : '';
+    const filterHtml = `<div style="margin-bottom:16px"><input type="text" id="world-filter-input" placeholder="🔍 搜尋時間線、結局..." value="${state.worldFilter||''}" oninput="app.filterWorld(this.value)" style="width:100%;padding:8px 12px;background:var(--dos-black);border:1px solid var(--dos-border);color:var(--dos-white);font-family:var(--font-mono);font-size:0.75rem"></div>`;
+
+    // Filter helpers
+    const matches = (item) => {
+      if (!filterQ) return true;
+      return JSON.stringify(item).toLowerCase().includes(filterQ);
+    };
+
+    let html = filterHtml;
 
     // World Timeline with progress bars
-    let html = `<h4 style="font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">世界觀時間線</h4>` +
-      editBtn + tl.map((item, i) => `
+    const filteredTl = tl.filter(matches);
+
+    html += `<h4 style="font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">世界觀時間線</h4>` +
+      editBtn + filteredTl.map((item, i) => `
       <div class="tl-item ${progressColor(item.progress)}" ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}' )" style="cursor:pointer"` : ``}>
         <div class="tl-marker ${progressColor(item.progress)}"></div>
         <div class="tl-year">${item.year}</div>
@@ -317,8 +336,9 @@
     // Story Timeline section
     const storyEditBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addStoryTimeline()">+ 新增故事階段</button></div>` : '';
     const tagLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
+    const filteredStl = (stl||[]).filter(matches);
     html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">故事時間線</h4>` +
-      storyEditBtn + (stl||[]).map((item, i) => `
+      storyEditBtn + filteredStl.map((item, i) => `
       <div class="tl-item ${progressColor(item.progress)}" ${state.isEditMode ? `onclick="app.openEdit('story_timeline','${item.name}' )" style="cursor:pointer"` : ``}>
         <div class="tl-marker ${progressColor(item.progress)}"></div>
         <div class="tl-year">${item.days}</div>
@@ -333,8 +353,12 @@
     const routeColors = { common: 'cyan', xavier: 'gold', lycaon: 'magenta', secret: 'cyan' };
     const routeIcon = (r) => r === 'xavier' ? '⚖' : r === 'lycaon' ? '🐺' : r === 'secret' ? '🌀' : '📖';
 
-    html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">結局分支（共 7 條）</h4>
-      <div class="endings-grid">` + endings.map((e) => `
+    const endingAddBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-outline" onclick="app.addEnding()">+ 新增結局</button></div>` : '';
+
+    const filteredEndings = endings.filter(matches);
+
+    html += endingAddBtn + `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">結局分支（共 ${filteredEndings.length} 條）</h4>
+      <div class="endings-grid">` + filteredEndings.map((e) => `
         <div class="ending-card ending-${routeColors[e.route]} ${progressColor(e.progress)}" ${state.isEditMode ? `onclick="app.openEdit('endings','${e.id}' )" style="cursor:pointer"` : ``}>
           <div class="ending-header">
             <span class="ending-route-icon">${routeIcon(e.route)}</span>
@@ -382,16 +406,12 @@
 
   // ── EDIT MODE ──
   function toggleEdit() {
-    if (!state.githubToken) {
-      toast('請先連接 GitHub（設定頁面）', 'info');
-      return;
-    }
     state.isEditMode = !state.isEditMode;
     const icon = document.getElementById('edit-btn-icon');
     icon.textContent = state.isEditMode ? '✅' : '✏️';
     document.body.classList.toggle('edit-mode', state.isEditMode);
     renderCurrentView();
-    toast(state.isEditMode ? '已進入編輯模式（僅本地，無推送需手動儲存）' : '已退出編輯模式', 'info');
+    toast(state.isEditMode ? '✅ 已進入編輯模式（本機編輯，需按💾儲存）' : '已退出編輯模式', 'info');
   }
 
   function openEdit(type, id) {
@@ -441,6 +461,17 @@
     const renderField = (k, v) => {
       const isEnum = enumFields[k];
       const isArr = arrayFields.has(k);
+      const isObj = v !== null && typeof v === 'object' && !Array.isArray(v);
+      if (isObj) {
+        return `
+        <div class="block-row" style="flex-direction:column;align-items:stretch">
+          <input class="block-type-select" value="${k}" readonly style="width:120px" title="巢狀物件">
+          <div style="padding:8px 12px;background:var(--dos-dark);border:1px solid var(--dos-border);font-family:var(--font-mono);font-size:0.7rem;color:var(--dos-gray);display:flex;align-items:center;justify-content:space-between">
+            <span>📦 巢狀物件 — 請用 JSON 模式編輯</span>
+            <button class="btn-sm" onclick="app.showJsonEditor()">{} 開啟 JSON</button>
+          </div>
+        </div>`;
+      }
       const val = isArr && Array.isArray(v) ? v.join(', ') : v;
       const inputHtml = isEnum
         ? `<select class="block-content-input block-select-input" data-field="${k}" onchange="app.markDirty()">${isEnum.map(opt => `<option value="${opt}"${val===opt?' selected':''}>${opt === 'done'?'已完成':opt === 'active'?'進行中':opt === 'pending'?'待開始':opt === 'common'?'共通':opt === 'xavier'?'澤維爾':opt === 'lycaon'?'萊卡翁':opt === 'secret'?'隱藏':opt}</option>`).join('')}</select>`
@@ -626,27 +657,49 @@
     }
   }
 
+  function addCharacter() {
+    if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
+    const newId = 'char_' + Date.now();
+    const char = { id: newId, name_zh: '新角色', name_en: 'New Character', route: 'COMMON_ROUTE', role: '請填寫角色定位', description: '請填寫角色描述', tags: ['標籤1'] };
+    GameData.meta = {...GameData.meta, characters: [...(GameData.meta.characters||[]), char]};
+    markDirty();
+    renderCharacters();
+    openEdit('characters', newId);
+    toast('已新增角色，請填寫詳細資料', 'success');
+  }
+
   function addWorldEvent() {
     if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
-    const title = prompt('時間點標題：');
-    if (!title) return;
-    const event = { year: '2088', title, desc: '請填寫描述', progress: 0, branch: 'common' };
+    const newId = 'we_' + Date.now();
+    const event = { year: '2088', title: newId, desc: '請填寫描述', progress: 0, branch: 'common' };
     GameData.meta = {...GameData.meta, world_timeline: [...GameData.meta.world_timeline, event]};
-    renderWorld();
-    openEdit('world_timeline', title);
     markDirty();
+    renderWorld();
+    openEdit('world_timeline', newId);
+    toast('已新增世界觀時間點，請填寫詳細資料', 'success');
   }
 
   function addStoryTimeline() {
     if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
-    const name = prompt('故事階段名稱：');
-    if (!name) return;
-    const item = { days: 'Day ?', name, desc: '請填寫描述', tag: 'common', progress: 0 };
+    const newId = 'st_' + Date.now();
+    const item = { days: 'Day ?', name: newId, desc: '請填寫描述', tag: 'common', progress: 0 };
     const arr = GameData.meta.story_timeline || [];
     GameData.meta = {...GameData.meta, story_timeline: [...arr, item]};
-    renderWorld();
-    openEdit('story_timeline', name);
     markDirty();
+    renderWorld();
+    openEdit('story_timeline', newId);
+    toast('已新增故事階段，請填寫詳細資料', 'success');
+  }
+
+  function addEnding() {
+    if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
+    const newId = 'ending_' + String(GameData.meta.endings.length + 1).padStart(2, '0');
+    const ending = { id: newId, name: '新結局', route: 'common', desc: '請填寫結局描述', char: null, progress: 0 };
+    GameData.meta = {...GameData.meta, endings: [...(GameData.meta.endings||[]), ending]};
+    markDirty();
+    renderWorld();
+    openEdit('endings', newId);
+    toast('已新增結局，請填寫詳細資料', 'success');
   }
 
   function editStatKey(key) {
@@ -696,28 +749,25 @@
 
   function addPhase() {
     if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
-    const name = prompt('開發階段名稱：');
-    if (!name) return;
-    const phase = { name, status: 'pending', desc: '請填寫描述', progress: 0 };
+    const newId = 'Phase ' + (GameData.meta.phases.length + 1) + ': ';
+    const phase = { name: newId, status: 'pending', desc: '請填寫描述', progress: 0 };
     GameData.meta = {...GameData.meta, phases: [...GameData.meta.phases, phase]};
     markDirty();
     renderDashboard();
-    openEdit('phases', name);
-    toast(`已新增階段：${name}`, 'success');
+    openEdit('phases', newId);
+    toast('已新增階段，請填寫詳細資料', 'success');
   }
 
   function addSystem() {
     if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
-    const name = prompt('系統名稱：');
-    if (!name) return;
     const id = 'sys_' + Date.now();
-    const sys = { id, num: '99', icon: '⚙️', name, desc: '請填寫描述', tags: [] };
+    const sys = { id, num: '99', icon: '⚙️', name: id, desc: '請填寫描述', tags: [] };
     GameData.meta = {...GameData.meta, systems: [...(GameData.meta.systems||[]), sys]};
     markDirty();
     if (state.currentView === 'dashboard') renderDashboard();
     else renderSystems();
     openEdit('systems', id);
-    toast(`已新增系統：${name}`, 'success');
+    toast('已新增系統，請填寫詳細資料', 'success');
   }
 
   function deleteCurrentRecord() {
@@ -895,8 +945,14 @@
         headers: API.headers(state.githubToken),
         body: JSON.stringify({ sha: newCommit.sha, force: false })
       }).then(r => { if (!r.ok) throw new Error(`Ref update failed: ${r.status}`); return r.json(); });
-      statusEl.innerHTML = `<span style="color:var(--dos-success)">✓ 已推送全部 ${Object.keys(fileContents).length} 個檔案（1 次 commit）</span>`;
-      toast(`已推送 ${Object.keys(fileContents).length} 個檔案至 GitHub（1 次 commit）`, 'success');
+      statusEl.innerHTML = `<span style="color:var(--dos-success)">✓ 已推送全部 ${Object.keys(fileContents).length} 個檔案</span>`;
+      toast(`已推送 ${Object.keys(fileContents).length} 個檔案至 GitHub`, 'success');
+
+      // Check GitHub Pages deployment status
+      statusEl.innerHTML += `<br><span style="color:var(--dos-gray);font-size:0.7rem">⏳ 檢查 Pages 部署狀態...</span>`;
+      checkPagesDeployment(repo).then(result => {
+        statusEl.innerHTML += `<br><span style="color:${result.color}">${result.icon} ${result.text}</span>`;
+      });
     } catch(e) {
       console.error('Push error:', e);
       statusEl.innerHTML = `<span style="color:var(--dos-danger)">⚠ 推送失敗：${e.message}</span>`;
@@ -917,6 +973,37 @@
     } catch(e) {
       console.warn(`pushSingleFile failed for ${path}:`, e.message);
       return false;
+    }
+  }
+
+  // ── GitHub Pages deployment status ──
+  async function checkPagesDeployment(repo) {
+    try {
+      const pagesResp = await fetch(`https://api.github.com/repos/${repo}/pages`, {
+        headers: API.headers(state.githubToken)
+      });
+      if (!pagesResp.ok) return { icon: 'ℹ️', text: 'GitHub Pages 未啟用或無權限', color: 'var(--dos-gray)' };
+
+      // Check latest deployment from Actions
+      const deployResp = await fetch(
+        `https://api.github.com/repos/${repo}/actions/runs?event=push&branch=main&per_page=1&status=completed`,
+        { headers: API.headers(state.githubToken) }
+      );
+      if (!deployResp.ok) return { icon: '✅', text: '推送成功！（未取得部署狀態）', color: 'var(--dos-success)' };
+
+      const deployData = await deployResp.json();
+      const latestRun = deployData.workflow_runs?.[0];
+      if (!latestRun) return { icon: '✅', text: '推送成功！（等待 Actions 觸發）', color: 'var(--dos-success)' };
+
+      if (latestRun.conclusion === 'success') {
+        return { icon: '✅', text: `Pages 部署成功（${latestRun.updated_at?.split('T')[0] || ''}）`, color: 'var(--dos-success)' };
+      } else if (latestRun.conclusion === 'failure') {
+        return { icon: '⚠️', text: `Pages 部署失敗 — 請檢查 Actions`, color: 'var(--dos-danger)' };
+      } else {
+        return { icon: '⏳', text: `Pages 狀態：${latestRun.conclusion || '進行中'}`, color: 'var(--dos-gray)' };
+      }
+    } catch(e) {
+      return { icon: 'ℹ️', text: '推送成功！（Pages 狀態查詢失敗）', color: 'var(--dos-gray)' };
     }
   }
 
@@ -1144,7 +1231,7 @@
     switchView, renderCurrentView,
     toggleEdit, openEdit, editCancel, editSave, markDirty,
     showJsonEditor, showBlockEditor, addField, addRecord, deleteBlock,
-    newNote, addWorldEvent, addStoryTimeline, editStatKey, addStat, deleteStatKey, addPhase, addSystem, deleteCurrentRecord, filterBacklog, openSettings,
+    newNote, addCharacter, addWorldEvent, addStoryTimeline, addEnding, editStatKey, addStat, deleteStatKey, addPhase, addSystem, deleteCurrentRecord, filterBacklog, filterWorld, openSettings,
     renderFontSizeGrid, setFontSize,
     saveToken, toggleAutosave, toggleShowIds, resetLocal,
     connectGithub, pushToGithub, loadFromGithub,

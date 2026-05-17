@@ -295,7 +295,7 @@ const GameData = (function() {
     set meta(v) { _overrides.meta = v; },
     reset() { Object.keys(_overrides).forEach(k => delete _overrides[k]); },
     exportAll() {
-      return {orders:this.orders,events:this.events,items:this.items,emails:this.emails,news:this.news,notes:this.notes,meta:this.meta,notes:this.notes};
+      return {orders:this.orders,events:this.events,items:this.items,emails:this.emails,news:this.news,notes:this.notes,meta:this.meta};
     }
   };
 })();
