@@ -661,7 +661,7 @@
     for (const name of files) {
       try {
         const file = await API.getFile(`content/${name}.json`, repo);
-        const content = atob(file.content);
+        const content = atob(file.content.replace(/\n/g, ''));
         const data = JSON.parse(content);
         GameData[name === 'meta' ? 'meta' : name] = data;
         loaded++;
