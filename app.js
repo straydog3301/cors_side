@@ -918,6 +918,94 @@
     }
   }
 
+  // ── Google Sheets → JSON export ──
+  const SHEET_ID = '1-7_G0op_RIcdFLczgUcXfoA-HwlFezUdr_Sey9klPuI';
+  const SHEET_GIDS = [
+    [181815012, '維修訂單'],
+    [905775828, '中繼點設定'],
+    [1267037659, '障礙物設定'],
+    [1060073204, '派遣區域'],
+    [952084614, '派遣節點'],
+    [1020030094, '掉落物'],
+    [1030852645, '道具'],
+    [280025507, '天氣修正'],
+    [2107340252, '新聞'],
+    [1617225367, '郵件'],
+    [1375268653, '時間事件'],
+    [402598334, '角色狀態'],
+  ];
+
+  async function exportSheetJSON() {
+    const statusEl = document.getElementById('db-export-status');
+    if (!statusEl) return;
+    statusEl.textContent = '正在讀取 Google Sheets 資料...';
+    try {
+      const allData = {};
+      for (const [gid, name] of SHEET_GIDS) {
+        statusEl.textContent = `正在讀取：${name}...`;
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}`;
+        const resp = await fetch(url);
+        if (!resp.ok) continue;
+        const text = await resp.text();
+        const match = text.match(/google\.visualization\.Query\.setResponse\((.+)\)/);
+        if (!match) continue;
+        const raw = JSON.parse(match[1]);
+        const rows = raw.table?.rows || [];
+        const cols = raw.table?.cols || [];
+
+        // col label format: "orderID string D1_00" → take first token as field name
+        // col[0] is a row-note column ("欄位名稱 資料類型 參照") — rename it
+        let fieldNames = cols.map((c, i) => {
+          const label = c?.label || '';
+          const parts = label.trim().split(/\s+/);
+          if (i === 0) return '_rowNote'; // first col is metadata/notes
+          return parts[0] || `col_${i}`;
+        });
+
+        // The rows from Visualization API already skip header rows
+        const records = rows.map(row => {
+          const cells = row.c || [];
+          const rec = {};
+          cells.forEach((cell, i) => {
+            if (i < fieldNames.length && fieldNames[i]) {
+              let val = cell?.v !== undefined ? cell.v : '';
+              // Convert numeric strings
+              if (typeof val === 'string' && /^[0-9]+(\.[0-9]+)?$/.test(val.trim())) {
+                val = Number(val);
+              }
+              rec[fieldNames[i]] = val;
+            }
+          });
+          // Remove the _rowNote field if empty
+          if (rec._rowNote === '' || rec._rowNote === null || rec._rowNote === undefined) {
+            delete rec._rowNote;
+          }
+          return rec;
+        }).filter(r => Object.keys(r).length > 0 && Object.values(r).some(v => v !== '' && v !== null && v !== undefined));
+        allData[name] = records;
+      }
+      statusEl.textContent = `✓ 已讀取 ${Object.keys(allData).length} 張表，準備下載...`;
+
+      // Trigger download
+      const jsonStr = JSON.stringify(allData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cors_sheets_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      statusEl.textContent = `✓ 已匯出 ${Object.keys(allData).length} 張表（${(jsonStr.length/1024).toFixed(0)} KB）`;
+      toast(`已匯出 ${Object.keys(allData).length} 張 sheet 為 JSON`, 'success');
+    } catch (e) {
+      console.error('Sheet export error:', e);
+      statusEl.textContent = `⚠ 匯出失敗：${e.message}`;
+      toast(`匯出失敗：${e.message}`, 'error');
+    }
+  }
+
   async function loadFromGithubSilent() {
     // Same as loadFromGithub but without toast/status — used for auto-pull on init
     const repo = document.getElementById('setting-repo')?.value || 'straydog3301/cors_side';
@@ -1041,7 +1129,8 @@
     renderFontSizeGrid, setFontSize,
     saveToken, toggleAutosave, toggleShowIds, resetLocal,
     connectGithub, pushToGithub, loadFromGithub,
-    saveAll, saveToLocalStorage
+    saveAll, saveToLocalStorage,
+    exportSheetJSON
   };
 
   document.addEventListener('DOMContentLoaded', init);
