@@ -21,6 +21,9 @@
   };
 
   // ── GitHub API helpers ──
+  function utf8ToBase64(str) {
+    return btoa(String.fromCharCode(...new Uint8Array(new TextEncoder().encode(str))));
+  }
   const API = {
     headers(token) {
       return {
@@ -35,12 +38,19 @@
       if (!r.ok) throw new Error(`GET ${path}: ${r.status}`);
       return r.json();
     },
-    async putFile(path, content, repo, msg) {
-      const data = { message: msg, content: btoa(unescape(encodeURIComponent(content))) };
+    async putFile(path, content, repo, sha, msg) {
+      const data = {
+        message: msg,
+        content: utf8ToBase64(content),
+        ...(sha ? { sha } : {})
+      };
       const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
         method: 'PUT', headers: API.headers(state.githubToken), body: JSON.stringify(data)
       });
-      if (!r.ok) throw new Error(`PUT ${path}: ${r.status}`);
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({ message: r.statusText }));
+        throw new Error(`PUT ${path}: ${r.status} — ${err.message}`);
+      }
       return r.json();
     }
   };
@@ -102,6 +112,7 @@
           <div class="phase-item-desc">${p.desc}</div>
         </div>
         <div class="phase-item-pct">${p.progress}%</div>
+        ${state.isEditMode ? `<button class="btn-sm btn-outline" style="margin-left:8px" onclick="app.openEdit('phases','${p.name}')">編輯</button>` : ''}
       </div>`).join('');
 
     // Orders
@@ -183,7 +194,7 @@
       ].filter(Boolean).join(' · ');
       const type = item._type ? item._type.split('.').pop() : '';
       return `
-        <div class="backlog-item" onclick="app.openEdit('${state.backlogTab}','${item._file}')">
+        <div class="backlog-item" onclick="app.openEdit('${state.backlogTab}','${item.id || item._file}')">
           <span class="bk-id">${state.showIds ? id : id.substring(0,12)}</span>
           <span class="bk-title">${name}</span>
           ${meta ? `<span class="bk-meta">${meta}</span>` : ''}
@@ -291,7 +302,7 @@
     else if (type === 'events') data = GameData.events.find(e => e._file === id);
     else if (type === 'items') data = GameData.items.find(i => i._file === id);
     else if (type === 'emails') data = GameData.emails.find(e => e._file === id);
-    else if (type === 'news') data = GameData.news.find(n => n._file === id);
+    else if (type === 'news') data = GameData.news.find(n => n.id === id);
     else if (type === 'characters') data = GameData.meta.characters.find(c => c.id === id);
     else if (type === 'notes') data = GameData.notes.find(n => n.id === id);
     else if (type === 'systems') data = GameData.meta.systems.find(s => s.id === id);
@@ -411,10 +422,21 @@
     else if (type === 'items') { const arr = GameData.items; const idx = arr.findIndex(i => i._file === id); if (idx >= 0) GameData.items = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
     else if (type === 'emails') { const arr = GameData.emails; const idx = arr.findIndex(e => e._file === id); if (idx >= 0) GameData.emails = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
     else if (type === 'notes') { const arr = GameData.notes; const idx = arr.findIndex(n => n.id === id); if (idx >= 0) GameData.notes = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
+    else if (type === 'news') { const arr = GameData.news; const idx = arr.findIndex(n => n._file === id); if (idx >= 0) GameData.news = [...arr.slice(0,idx), {...arr[idx], ...newData}, ...arr.slice(idx+1)]; }
     else if (type === 'characters') {
       const chars = GameData.meta.characters;
       const idx = chars.findIndex(c => c.id === id);
       if (idx >= 0) GameData.meta = {...GameData.meta, characters: [...chars.slice(0,idx), {...chars[idx], ...newData}, ...chars.slice(idx+1)]};
+    }
+    else if (type === 'systems') {
+      const sys = GameData.meta.systems;
+      const idx = sys.findIndex(s => s.id === id);
+      if (idx >= 0) GameData.meta = {...GameData.meta, systems: [...sys.slice(0,idx), {...sys[idx], ...newData}, ...sys.slice(idx+1)]};
+    }
+    else if (type === 'phases') {
+      const ph = GameData.meta.phases;
+      const idx = ph.findIndex(p => p.name === id);
+      if (idx >= 0) GameData.meta = {...GameData.meta, phases: [...ph.slice(0,idx), {...ph[idx], ...newData}, ...ph.slice(idx+1)]};
     }
   }
 
@@ -466,7 +488,7 @@
   }
 
   async function pushToGithub() {
-    if (!state.githubToken) { toast('請先連接 GitHub', 'error'); return; }
+    if (!state.githubToken) { toast('請先連接 GitHub（設定頁面）', 'error'); return; }
     const repo = document.getElementById('setting-repo').value || 'straydog3301/cors_side';
     const data = GameData.exportAll();
     const files = {
@@ -479,15 +501,30 @@
       'content/meta.json': JSON.stringify(data.meta, null, 2),
     };
     const statusEl = document.getElementById('sync-status');
-    statusEl.textContent = '推送中...';
+    statusEl.textContent = '推送中...（取 SHA...）';
     let success = 0, fail = 0;
+    const shaCache = {};
+    // Pre-fetch SHAs for all files
+    for (const path of Object.keys(files)) {
+      try {
+        const file = await API.getFile(path, repo);
+        shaCache[path] = file.sha;
+      } catch(e) {
+        // File doesn't exist yet — no SHA needed
+        shaCache[path] = null;
+      }
+    }
+    statusEl.textContent = '推送中...';
     for (const [path, content] of Object.entries(files)) {
       try {
-        await API.putFile(path, content, repo, `docs: update ${path} via CORS Dev Panel`);
+        await API.putFile(path, content, repo, shaCache[path], `docs: update ${path} via CORS Dev Panel`);
         success++;
+        statusEl.textContent = `推送中... ${success}/${Object.keys(files).length}`;
       } catch(e) {
         fail++;
         console.error(`Push failed for ${path}:`, e);
+        statusEl.innerHTML = `<span style="color:var(--danger)">⚠ 失敗：${e.message}</span>`;
+        toast(`推送失敗：${path} — ${e.message}`, 'error');
       }
     }
     if (fail === 0) {
