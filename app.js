@@ -90,9 +90,18 @@
     }
   }
 
+  // Helper: progress color class
+  function progressColor(pct) {
+    if (pct >= 100) return 'done';
+    if (pct >= 50) return 'mid';
+    if (pct >= 1) return 'low';
+    return 'none';
+  }
+
   // ── RENDER: Dashboard ──
   function renderDashboard() {
     const meta = GameData.meta;
+    const edit = state.isEditMode;
 
     // Hero
     const heroEl = document.getElementById('dash-hero');
@@ -107,8 +116,9 @@
     // Phases
     const phasesEl = document.getElementById('phases-list');
     if (phasesEl) {
-      phasesEl.innerHTML = meta.phases.map(p => `
-        <div class="phase-item ${p.status}">
+      const addBtn = edit ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-outline dash-edit-btn" onclick="app.addPhase()">+ 新增階段</button></div>` : '';
+      phasesEl.innerHTML = addBtn + meta.phases.map(p => `
+        <div class="phase-item ${p.status}" ${edit ? `onclick="app.openEdit('phases','${p.name.replace(/'/g,"\\'")}')"` : ''}>
           <div class="phase-status-dot ${p.status}"></div>
           <div>
             <div class="phase-item-name">${p.name}</div>
@@ -121,43 +131,49 @@
     // Stats
     const statsEl = document.getElementById('dash-stats');
     if (statsEl) {
-      statsEl.innerHTML = Object.entries(meta.stats||{}).map(([k,v]) => `
+      const entries = Object.entries(meta.stats||{});
+      statsEl.innerHTML = (edit && entries.length > 0 ? entries.map(([k,v]) => `
+        <div class="dash-stat-card dash-stat-edit" onclick="app.editStatKey('${k.replace(/'/g,"\\'")}')">
+          <span class="dash-stat-num">${v}</span>
+          <span class="dash-stat-label">${k}</span>
+        </div>`) :
+        entries.map(([k,v]) => `
         <div class="dash-stat-card">
           <span class="dash-stat-num">${v}</span>
           <span class="dash-stat-label">${k}</span>
-        </div>`).join('');
+        </div>`)
+      ).join('');
+      if (edit) {
+        statsEl.innerHTML += `<div class="dash-stat-card dash-stat-add" onclick="app.addStat()"><span class="dash-stat-add-icon">+</span><span class="dash-stat-label">新增</span></div>`;
+      }
     }
 
-    // Core Systems
+    // Core Systems (from meta.systems, short summary)
     const sysEl = document.getElementById('systems-list');
     if (sysEl) {
-      const systems = [
-        { icon:'🔧', name:'維修系統', desc:'故障路徑導航'},
-        { icon:'🗺️', name:'派遣系統', desc:'隨機地圖·資源管理'},
-        { icon:'💰', name:'經濟系統', desc:'商店·物流·消耗品'},
-        { icon:'📰', name:'新聞系統', desc:'天氣·折扣·事件'},
-        { icon:'💜', name:'隊友系統', desc:'屬性·好感·路線'},
-        { icon:'💬', name:'戀愛系統', desc:'對話選擇·結局分歧'},
-      ];
-      sysEl.innerHTML = systems.map(s => `
-        <div class="system-item">
+      const systems = meta.systems || [];
+      const addBtn = edit ? `<button class="btn-sm btn-outline dash-edit-btn" onclick="app.addSystem()" style="float:right">+ 新增</button>` : '';
+      sysEl.innerHTML = (addBtn ? `<div style="text-align:right;margin-bottom:4px">${addBtn}</div>` : '') + systems.map(s => `
+        <div class="system-item" ${edit ? `onclick="app.openEdit('systems','${s.id}')" style="cursor:pointer"` : ''}>
           <span class="system-icon">${s.icon}</span>
           <span class="system-name">${s.name}</span>
           <span class="system-desc">${s.desc}</span>
         </div>`).join('');
     }
 
-    // Story Timeline
+    // Story Timeline (with progress bars)
     const tlEl = document.getElementById('story-timeline');
     if (tlEl) {
       const stl = meta.story_timeline || [];
       const tagLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
-      tlEl.innerHTML = `<div class="tl-track">${stl.length > 0 ? stl.map(p => `
-        <div class="tl-node">
-          <div class="tl-dot ${p.progress > 0 ? 'active' : 'pending'}"></div>
+      const addBtn = edit ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-outline dash-edit-btn" onclick="app.addStoryTimeline()">+ 新增</button></div>` : '';
+      tlEl.innerHTML = addBtn + `<div class="tl-track">${stl.length > 0 ? stl.map(p => `
+        <div class="tl-node" ${edit ? `onclick="app.openEdit('story_timeline','${p.name.replace(/'/g,"\\'")}')" style="cursor:pointer"` : ''}>
+          <div class="tl-dot ${progressColor(p.progress)}"></div>
           <div class="tl-content">
             <div class="tl-days">${p.days}</div>
             <div class="tl-name">${p.name}</div>
+            ${p.progress !== undefined ? `<div class="dash-tl-progress"><div class="dash-tl-progress-fill ${progressColor(p.progress)}" style="width:${p.progress}%"></div></div><span class="dash-tl-progress-label">${p.progress}%</span>` : ''}
             <span class="tl-route-tag tl-tag-${p.tag}">${tagLabels[p.tag]||p.tag}路線</span>
           </div>
         </div>`).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.75rem">暫無故事時間線資料</div>'}</div>`;
@@ -168,7 +184,7 @@
     if (crEl) {
       const chars = meta.characters || [];
       crEl.innerHTML = chars.map(c => `
-        <div class="char-route-card">
+        <div class="char-route-card" ${edit ? `onclick="app.openEdit('characters','${c.id}')" style="cursor:pointer"` : ''}>
           <div class="char-route-avatar char-avatar-${c.id}">${c.id==='xavier'?'⚖':'🐺'}</div>
           <div class="char-route-info">
             <div class="char-route-name">${c.name_zh} · ${c.name_en}</div>
@@ -178,14 +194,17 @@
         </div>`).join('');
     }
 
-    // World Cards
+    // World Cards (with progress bars)
     const wcEl = document.getElementById('world-cards');
     if (wcEl) {
-      wcEl.innerHTML = (meta.world_timeline||[]).map(w => `
-        <div class="world-card">
+      const wt = meta.world_timeline||[];
+      const addBtn = edit ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-outline dash-edit-btn" onclick="app.addWorldEvent()">+ 新增</button></div>` : '';
+      wcEl.innerHTML = addBtn + wt.map(w => `
+        <div class="world-card" ${edit ? `onclick="app.openEdit('world_timeline','${w.title.replace(/'/g,"\\'")}')" style="cursor:pointer"` : ''}>
           <div class="world-card-year">${w.year}</div>
           <div class="world-card-title">${w.title}</div>
           <div class="world-card-desc">${w.desc}</div>
+          ${w.progress !== undefined ? `<div class="dash-tl-progress" style="margin-top:6px"><div class="dash-tl-progress-fill ${progressColor(w.progress)}" style="width:${w.progress}%"></div></div><span class="dash-tl-progress-label">${w.progress}%</span>` : ''}
         </div>`).join('');
     }
 
@@ -279,14 +298,6 @@
     const tl = GameData.meta.world_timeline;
     const stl = GameData.meta.story_timeline;
     const endings = GameData.meta.endings;
-
-    // Helper: get progress color class
-    const progressColor = (pct) => {
-      if (pct >= 100) return 'done';
-      if (pct >= 50) return 'mid';
-      if (pct >= 1) return 'low';
-      return 'none';
-    };
 
     const editBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addWorldEvent()">+ 新增時間點</button></div>` : '';
 
@@ -613,6 +624,74 @@
     markDirty();
   }
 
+  function editStatKey(key) {
+    if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
+    const action = confirm(`編輯「${key}」？\n確定 = 修改名稱\n取消 = 刪除此項`) ? 'edit' : 'delete';
+    if (action === 'delete') {
+      return deleteStatKey(key);
+    }
+    const stats = GameData.meta.stats || {};
+    const newKey = prompt('統計項目標籤名稱：', key);
+    if (!newKey || newKey === key) return;
+    const val = stats[key];
+    const newStats = {...stats};
+    delete newStats[key];
+    newStats[newKey] = val;
+    GameData.meta = {...GameData.meta, stats: newStats};
+    markDirty();
+    renderDashboard();
+    toast(`統計項目 "${key}" → "${newKey}"`, 'success');
+  }
+
+  function addStat() {
+    if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
+    const key = prompt('新統計項目標籤（如：角色數量）：');
+    if (!key) return;
+    const val = prompt('數值（如：2）：', '0');
+    if (val === null) return;
+    GameData.meta = {...GameData.meta, stats: {...GameData.meta.stats, [key]: val}};
+    markDirty();
+    saveToLocalStorage();
+    renderDashboard();
+    toast(`已新增統計項目：${key} = ${val}`, 'success');
+  }
+
+  function deleteStatKey(key) {
+    if (!confirm(`確定移除統計項目「${key}」？`)) return;
+    const newStats = {...GameData.meta.stats};
+    delete newStats[key];
+    GameData.meta = {...GameData.meta, stats: newStats};
+    markDirty();
+    renderDashboard();
+    toast(`已刪除統計項目：${key}`, 'success');
+  }
+
+  function addPhase() {
+    if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
+    const name = prompt('開發階段名稱：');
+    if (!name) return;
+    const phase = { name, status: 'pending', desc: '請填寫描述', progress: 0 };
+    GameData.meta = {...GameData.meta, phases: [...GameData.meta.phases, phase]};
+    markDirty();
+    renderDashboard();
+    openEdit('phases', name);
+    toast(`已新增階段：${name}`, 'success');
+  }
+
+  function addSystem() {
+    if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
+    const name = prompt('系統名稱：');
+    if (!name) return;
+    const id = 'sys_' + Date.now();
+    const sys = { id, num: '99', icon: '⚙️', name, desc: '請填寫描述', tags: [] };
+    GameData.meta = {...GameData.meta, systems: [...(GameData.meta.systems||[]), sys]};
+    markDirty();
+    if (state.currentView === 'dashboard') renderDashboard();
+    else renderSystems();
+    openEdit('systems', id);
+    toast(`已新增系統：${name}`, 'success');
+  }
+
   function deleteCurrentRecord() {
     if (!confirm('確定要刪除此筆資料嗎？')) return;
     const { type, id } = state.editTarget;
@@ -900,7 +979,7 @@
     switchView, renderCurrentView,
     toggleEdit, openEdit, editCancel, editSave, markDirty,
     showJsonEditor, showBlockEditor, addField, addRecord, deleteBlock,
-    newNote, addWorldEvent, addStoryTimeline, deleteCurrentRecord, filterBacklog, openSettings,
+    newNote, addWorldEvent, addStoryTimeline, editStatKey, addStat, deleteStatKey, addPhase, addSystem, deleteCurrentRecord, filterBacklog, openSettings,
     renderFontSizeGrid, setFontSize,
     saveToken, toggleAutosave, toggleShowIds, resetLocal,
     connectGithub, pushToGithub, loadFromGithub,

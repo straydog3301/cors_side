@@ -428,6 +428,33 @@ input, textarea { font-family: var(--font-main); }
 .world-card-title { font-size: 0.8rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
 .world-card-desc { font-size: 0.7rem; color: var(--muted); line-height: 1.5; }
 
+/* Dashboard progress bars inside story timeline & world cards */
+.dash-tl-progress { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; width: 100px; margin: 4px 0 2px; }
+.dash-tl-progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+.dash-tl-progress-fill.done { background: #00e676; }
+.dash-tl-progress-fill.mid { background: var(--gold); }
+.dash-tl-progress-fill.low { background: var(--cyan); }
+.dash-tl-progress-fill.none { background: var(--muted); }
+.dash-tl-progress-label { font-family: var(--font-mono); font-size: 0.58rem; color: var(--muted); }
+
+/* Dashboard edit-mode elements */
+.dash-edit-btn { font-size: 0.65rem !important; padding: 3px 10px !important; }
+.dash-stat-edit { cursor: pointer; border-color: var(--border); transition: var(--transition); }
+.dash-stat-edit:hover { border-color: var(--gold); background: rgba(255,193,7,0.04); }
+.dash-stat-add { cursor: pointer; border: 1px dashed var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 80px; opacity: 0.5; transition: var(--transition); }
+.dash-stat-add:hover { opacity: 0.8; border-color: var(--cyan); }
+.dash-stat-add-icon { font-size: 1.4rem; color: var(--cyan); font-weight: 700; }
+
+/* Edit mode: show pointer on clickable items */
+.edit-mode .phase-item { cursor: pointer; transition: var(--transition); }
+.edit-mode .phase-item:hover { border-color: var(--gold); background: rgba(255,193,7,0.04); }
+.edit-mode .system-item { cursor: pointer; transition: var(--transition); }
+.edit-mode .system-item:hover { background: rgba(0,255,245,0.04); }
+.edit-mode .world-card { cursor: pointer; transition: var(--transition); }
+.edit-mode .world-card:hover { border-color: var(--gold); background: rgba(255,193,7,0.04); }
+.edit-mode .char-route-card { cursor: pointer; transition: var(--transition); }
+.edit-mode .char-route-card:hover { border-color: var(--gold); }
+
 /* Responsive: stack on narrow screens */
 @media (max-width: 900px) {
   .dash-root { grid-template-columns: 1fr; }
