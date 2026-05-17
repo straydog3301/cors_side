@@ -497,6 +497,7 @@
     document.getElementById('edit-overlay').classList.add('hidden');
     toast('已儲存（本地）', 'success');
 
+    saveToLocalStorage(); // always persist so refresh doesn't lose edits
     if (state.autosave) saveToLocalStorage();
     renderCurrentView();
   }
@@ -651,6 +652,75 @@
     }
   }
 
+  // Build clean data.js content from current GameData
+  function buildDataJsContent(data) {
+    const quote = (s) => {
+      if (s == null) return 'null';
+      if (typeof s === 'number') return String(s);
+      return JSON.stringify(String(s));
+    };
+    const encode = (arr) => '[' + arr.map(item => {
+      const pairs = Object.entries(item).map(([k, v]) => {
+        if (Array.isArray(v)) return `${k}:${encode(v)}`;
+        return `${k}:${quote(v)}`;
+      }).join(',');
+      return `{${pairs}}`;
+    }).join(',') + ']';
+
+    return `// data.js — CORS Game Data (auto-generated, UTF-8 clean)
+// Last updated: ${new Date().toISOString()}
+
+const GameData = (function() {
+  const orders = ${encode(data.orders)};
+  const events = ${encode(data.events)};
+  const items = ${encode(data.items)};
+  const emails = ${encode(data.emails)};
+  const news = ${encode(data.news)};
+  const notes = ${encode(data.notes)};
+  const meta = ${JSON.stringify(data.meta, null, 2)};
+
+  // Overrides applied on top of defaults (set by edit)
+  const _overrides = {};
+
+  return {
+    get orders() { return _overrides.orders || orders; },
+    get events() { return _overrides.events || events; },
+    get items() { return _overrides.items || items; },
+    get emails() { return _overrides.emails || emails; },
+    get news() { return _overrides.news || news; },
+    get notes() { return _overrides.notes || notes; },
+    get meta() { return _overrides.meta || meta; },
+    set orders(v) { _overrides.orders = v; },
+    set events(v) { _overrides.events = v; },
+    set items(v) { _overrides.items = v; },
+    set emails(v) { _overrides.emails = v; },
+    set news(v) { _overrides.news = v; },
+    set notes(v) { _overrides.notes = v; },
+    set meta(v) { _overrides.meta = v; },
+    reset() { _overrides = {}; },
+    exportAll() {
+      return {orders:this.orders, events:this.events, items:this.items, emails:this.emails, news:this.news, meta:this.meta, notes:this.notes};
+    }
+  };
+})();
+`;
+  }
+
+  async function pushSingleFile(repo, path, content, msg) {
+    try {
+      let sha;
+      try {
+        const existing = await API.getFile(path, repo);
+        sha = existing.sha;
+      } catch(e) { /* file doesn't exist yet, that's ok */ }
+      await API.putFile(path, content, repo, sha, msg);
+      return true;
+    } catch(e) {
+      console.warn(`pushSingleFile failed for ${path}:`, e.message);
+      return false;
+    }
+  }
+
   async function loadFromGithub() {
     if (!state.githubToken) { toast('請先連接 GitHub', 'error'); return; }
     const repo = document.getElementById('setting-repo').value || 'straydog3301/cors_side';
@@ -669,7 +739,21 @@
         console.warn(`Load failed for ${name}:`, e);
       }
     }
-    statusEl.innerHTML = `<span style="color:var(--cyan)">✓ 已拉取 ${loaded}/${files.length} 個檔案</span>`;
+    statusEl.innerHTML = `<span style="color:var(--cyan)">✓ 已拉取 ${loaded}/${files.length} 個檔案，正在重建 data.js...</span>`;
+
+    // Regenerate data.js with clean UTF-8 and push back to GitHub
+    const allData = GameData.exportAll();
+    const dataJsContent = buildDataJsContent(allData);
+    const ok = await pushSingleFile(repo, 'data.js', dataJsContent,
+      `fix: regenerate data.js (clean UTF-8) from content/*.json\ntimestamp: ${new Date().toISOString()}`);
+    if (ok) {
+      statusEl.innerHTML = `<span style="color:var(--success)">✓ 已拉取 ${loaded}/${files.length} 個檔案 + data.js 已重建</span>`;
+    } else {
+      statusEl.innerHTML = `<span style="color:var(--gold)">✓ 已拉取 ${loaded}/${files.length} 個檔案（data.js 重建失敗，請稍後刷新重試）</span>`;
+    }
+
+    // Always persist to localStorage so edits survive refresh even without autosave
+    saveToLocalStorage();
     renderCurrentView();
     toast(`已從 GitHub 拉取 ${loaded} 個檔案`, 'success');
   }
@@ -678,8 +762,6 @@
   function saveToLocalStorage() {
     localStorage.setItem('cors_local_data', JSON.stringify(GameData.exportAll()));
     state.localModified = true;
-    document.getElementById('commit-status').style.display = 'flex';
-    document.getElementById('commit-msg').textContent = '已自動儲存至本機';
   }
 
   function loadFromLocalStorage() {
@@ -700,17 +782,9 @@
   function init() {
     // loadFromLocalStorage() removed — always load fresh from data.js or GitHub pull
     // localStorage now manual-only via "從本機恢復" in Settings page
-
     // Nav
     document.querySelectorAll('.nav-item').forEach(btn => {
       btn.addEventListener('click', () => switchView(btn.dataset.view));
-    });
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && !document.getElementById('edit-overlay').classList.contains('hidden')) {
-        editCancel();
-      }
     });
 
     // Try reconnect GitHub if token saved
@@ -726,7 +800,16 @@
         }).catch(() => {});
     }
 
+    // Keyboard shortcuts
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !document.getElementById('edit-overlay').classList.contains('hidden')) {
+        editCancel();
+      }
+    });
+
     renderCurrentView();
+    // Restore local edits from localStorage after initial render
+    loadFromLocalStorage();
   }
 
   // Expose API
