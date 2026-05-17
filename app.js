@@ -147,7 +147,7 @@
     // Emails
     document.getElementById('email-count').textContent = `(${GameData.emails.length})`;
     document.getElementById('dash-emails').innerHTML = GameData.emails.slice(0,5).map(m => `
-      <div class="list-item" onclick="app.openEdit('emails','${m._file}')">
+      <div class="list-item" onclick="app.openEdit('emails','${m.id}')">
         <span class="list-item-id">${m.id}</span>
         <span class="list-item-name">${m.subject || '(無主旨)'}</span>
         <span class="list-item-meta">From: ${m.sender}</span>
@@ -179,6 +179,13 @@
       items = items.filter(i => JSON.stringify(i).toLowerCase().includes(q));
     }
     const container = document.getElementById('backlog-content');
+    const infoEl = document.getElementById('backlog-info');
+    const typeLabel = { orders:'訂單', events:'時間事件', items:'道具', emails:'郵件', news:'新聞' };
+    const countMap = { orders: GameData.orders.length, events: GameData.events.length, items: GameData.items.length, emails: GameData.emails.length, news: GameData.news.length };
+    const addBtn = state.isEditMode
+      ? `<button class="btn-sm" onclick="app.addRecord('${state.backlogTab}')" style="margin-left:auto">＋ 新增 ${typeLabel[state.backlogTab]||''}</button>`
+      : '';
+    infoEl.innerHTML = `<span style="font-size:0.75rem;color:var(--muted)">共 ${countMap[state.backlogTab]||items.length} 筆</span>${addBtn}`;
     if (items.length === 0) {
       container.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);font-family:var(--font-mono)">暫無資料${state.backlogFilter ? '（無符合搜尋結果）' : ''}</div>`;
       return;
@@ -193,8 +200,10 @@
         item.priority ? `優先${item.priority}` : ''
       ].filter(Boolean).join(' · ');
       const type = item._type ? item._type.split('.').pop() : '';
+      const _keyFor = { orders:'_file', events:'_file', items:'_file', news:'_file', emails:'id', characters:'id', notes:'id' };
+      const _k = _keyFor[state.backlogTab] || 'id';
       return `
-        <div class="backlog-item" onclick="app.openEdit('${state.backlogTab}','${item.id || item._file}')">
+        <div class="backlog-item" onclick="app.openEdit('${state.backlogTab}','${item[_k] || item._file || item.id}')">
           <span class="bk-id">${state.showIds ? id : id.substring(0,12)}</span>
           <span class="bk-title">${name}</span>
           ${meta ? `<span class="bk-meta">${meta}</span>` : ''}
@@ -301,7 +310,7 @@
     if (type === 'orders') data = GameData.orders.find(o => o._file === id);
     else if (type === 'events') data = GameData.events.find(e => e._file === id);
     else if (type === 'items') data = GameData.items.find(i => i._file === id);
-    else if (type === 'emails') data = GameData.emails.find(e => e._file === id);
+    else if (type === 'emails') data = GameData.emails.find(e => e.id === id);
     else if (type === 'news') data = GameData.news.find(n => n.id === id);
     else if (type === 'characters') data = GameData.meta.characters.find(c => c.id === id);
     else if (type === 'notes') data = GameData.notes.find(n => n.id === id);
@@ -335,7 +344,8 @@
             <button class="block-delete" onclick="app.deleteBlock(this)" title="刪除此欄">✕</button>
           </div>`).join('')}
         <div class="block-add-row">
-          <button class="block-add-btn" onclick="app.addBlock()">+ 新增欄位</button>
+          <button class="block-add-btn" onclick="app.addField()">＋ 新增欄位</button>
+          <button class="block-add-btn" onclick="app.addRecord()">＋ 新增一筆</button>
           <button class="block-add-btn" onclick="app.showJsonEditor()">{} JSON 模式</button>
         </div>
       </div>`;
@@ -360,13 +370,49 @@
     showEditOverlay(state.editTarget.type, state.editData);
   }
 
-  function addBlock() {
+  function addField() {
     const key = prompt('輸入新欄位名稱（英文）：');
     if (!key || !/^\w+$/.test(key)) { toast('無效的欄位名', 'error'); return; }
     if (key in state.editData) { toast('欄位已存在', 'error'); return; }
     state.editData[key] = '';
     markDirty();
     showEditOverlay(state.editTarget.type, state.editData);
+  }
+
+  function addRecord(type, template) {
+    if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
+    const t = type || state.editTarget?.type || state.backlogTab;
+    const allData = { orders: GameData.orders, events: GameData.events, items: GameData.items, emails: GameData.emails, news: GameData.news, notes: GameData.notes };
+    const pool = allData[t];
+    if (!pool || pool.length === 0) { toast('無法新增：無範本資料', 'error'); return; }
+    const tmpl = template || pool[0];
+    const newId = prompt(`新增 ${t} 的 ID（範例：${tmpl.orderID || tmpl.id || 'NewID'}）：`, 'New_' + Date.now());
+    if (!newId) return;
+    const newRec = JSON.parse(JSON.stringify(tmpl));
+    if (t === 'orders') newRec.orderID = newId;
+    else newRec.id = newId;
+    newRec._file = newId + '.asset';
+    // Clear non-essential fields
+    Object.keys(newRec).forEach(k => {
+      if (!k.startsWith('_') && k !== 'id' && k !== '_file' && k !== 'orderID' && k !== '_type') {
+        newRec[k] = '';
+      }
+    });
+    applyAdd(t, newRec);
+    state.editDirty = true;
+    markDirty();
+    if (t === 'notes') { renderNotes(); openEdit('notes', newId); }
+    else { renderCurrentView(); openEdit(t, newRec._file || newId); }
+    toast(`已新增：${newId}`, 'success');
+  }
+
+  function applyAdd(type, newRec) {
+    if (type === 'orders') GameData.orders = [...GameData.orders, newRec];
+    else if (type === 'events') GameData.events = [...GameData.events, newRec];
+    else if (type === 'items') GameData.items = [...GameData.items, newRec];
+    else if (type === 'emails') GameData.emails = [...GameData.emails, newRec];
+    else if (type === 'news') GameData.news = [...GameData.news, newRec];
+    else if (type === 'notes') GameData.notes = [...GameData.notes, newRec];
   }
 
   function deleteBlock(btn) {
@@ -613,7 +659,8 @@
 
   // ── Init ──
   function init() {
-    loadFromLocalStorage();
+    // loadFromLocalStorage() removed — always load fresh from data.js or GitHub pull
+    // localStorage now manual-only via "從本機恢復" in Settings page
 
     // Nav
     document.querySelectorAll('.nav-item').forEach(btn => {
@@ -662,7 +709,7 @@
   window.app = {
     switchView, renderCurrentView,
     toggleEdit, openEdit, editCancel, editSave, markDirty,
-    showJsonEditor, showBlockEditor, addBlock, deleteBlock,
+    showJsonEditor, showBlockEditor, addField, addRecord, deleteBlock,
     newNote, filterBacklog, openSettings,
     saveToken, saveEditPassword, toggleAutosave, toggleShowIds, resetLocal,
     connectGithub, pushToGithub, loadFromGithub,
