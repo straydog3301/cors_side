@@ -176,7 +176,7 @@
             ${p.progress !== undefined ? `<div class="dash-tl-progress"><div class="dash-tl-progress-fill ${progressColor(p.progress)}" style="width:${p.progress}%"></div></div><span class="dash-tl-progress-label">${p.progress}%</span>` : ''}
             <span class="tl-route-tag tl-tag-${p.tag}">${tagLabels[p.tag]||p.tag}路線</span>
           </div>
-        </div>`).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.75rem">暫無故事時間線資料</div>'}</div>`;
+        </div>`).join('') : '<div style="padding:20px;text-align:center;color:var(--dos-gray);font-size:0.75rem">暫無故事時間線資料</div>'}</div>`;
     }
 
     // Character Routes
@@ -237,9 +237,9 @@
     const addBtn = state.isEditMode
       ? `<button class="btn-sm" onclick="app.addRecord('${state.backlogTab}')" style="margin-left:auto">＋ 新增 ${typeLabel[state.backlogTab]||''}</button>`
       : '';
-    infoEl.innerHTML = `<span style="font-size:0.75rem;color:var(--muted)">共 ${countMap[state.backlogTab]||items.length} 筆</span>${addBtn}`;
+    infoEl.innerHTML = `<span style="font-size:0.75rem;color:var(--dos-gray)">共 ${countMap[state.backlogTab]||items.length} 筆</span>${addBtn}`;
     if (items.length === 0) {
-      container.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);font-family:var(--font-mono)">暫無資料${state.backlogFilter ? '（無符合搜尋結果）' : ''}</div>`;
+      container.innerHTML = `<div style="padding:40px;text-align:center;color:var(--dos-gray);font-family:var(--font-mono)">暫無資料${state.backlogFilter ? '（無符合搜尋結果）' : ''}</div>`;
       return;
     }
     container.innerHTML = items.map(item => {
@@ -302,7 +302,7 @@
     const editBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addWorldEvent()">+ 新增時間點</button></div>` : '';
 
     // World Timeline with progress bars
-    let html = `<h4 style="font-family:var(--font-title);font-size:0.85rem;color:var(--text);letter-spacing:2px;margin-bottom:16px;">世界觀時間線</h4>` +
+    let html = `<h4 style="font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">世界觀時間線</h4>` +
       editBtn + tl.map((item, i) => `
       <div class="tl-item ${progressColor(item.progress)}" ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}' )" style="cursor:pointer"` : ``}>
         <div class="tl-marker ${progressColor(item.progress)}"></div>
@@ -315,7 +315,7 @@
     // Story Timeline section
     const storyEditBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addStoryTimeline()">+ 新增故事階段</button></div>` : '';
     const tagLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
-    html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--text);letter-spacing:2px;margin-bottom:16px;">故事時間線</h4>` +
+    html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">故事時間線</h4>` +
       storyEditBtn + (stl||[]).map((item, i) => `
       <div class="tl-item ${progressColor(item.progress)}" ${state.isEditMode ? `onclick="app.openEdit('story_timeline','${item.name}' )" style="cursor:pointer"` : ``}>
         <div class="tl-marker ${progressColor(item.progress)}"></div>
@@ -331,7 +331,7 @@
     const routeColors = { common: 'cyan', xavier: 'gold', lycaon: 'magenta', secret: 'cyan' };
     const routeIcon = (r) => r === 'xavier' ? '⚖' : r === 'lycaon' ? '🐺' : r === 'secret' ? '🌀' : '📖';
 
-    html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--text);letter-spacing:2px;margin-bottom:16px;">結局分支（共 7 條）</h4>
+    html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">結局分支（共 7 條）</h4>
       <div class="endings-grid">` + endings.map((e) => `
         <div class="ending-card ending-${routeColors[e.route]} ${progressColor(e.progress)}" ${state.isEditMode ? `onclick="app.openEdit('endings','${e.id}' )" style="cursor:pointer"` : ``}>
           <div class="ending-header">
@@ -467,7 +467,7 @@
     const body = document.getElementById('edit-body');
     body.innerHTML = `
       <div class="block-editor" style="max-width:100%">
-        <div style="margin-bottom:12px;font-family:var(--font-mono);font-size:0.7rem;color:var(--muted)">JSON 模式 — 直接編輯原始資料</div>
+        <div style="margin-bottom:12px;font-family:var(--font-mono);font-size:0.7rem;color:var(--dos-gray)">JSON 模式 — 直接編輯原始資料</div>
         <textarea class="json-editor" id="json-editor">${JSON.stringify(state.editData, null, 2)}</textarea>
         <div style="margin-top:8px"><button class="block-add-btn" onclick="app.showBlockEditor()">← 返回區塊模式</button></div>
       </div>`;
@@ -803,13 +803,13 @@
       const r = await fetch('https://api.github.com/user', { headers: API.headers(token) });
       if (!r.ok) throw new Error(r.status);
       const user = await r.json();
-      document.getElementById('connect-status').innerHTML = `<span style="color:var(--success)">✓ 已連接：${user.login}</span>`;
+      document.getElementById('connect-status').innerHTML = `<span style="color:var(--dos-success)">✓ 已連接：${user.login}</span>`;
       document.getElementById('user-avatar').textContent = user.login.substring(0,2).toUpperCase();
       document.getElementById('user-name').textContent = user.login;
       document.getElementById('user-status').textContent = 'GitHub 已連接';
       toast(`已連接 GitHub：${user.login}`, 'success');
     } catch(e) {
-      document.getElementById('connect-status').innerHTML = `<span style="color:var(--danger)">連接失敗：${e.message}</span>`;
+      document.getElementById('connect-status').innerHTML = `<span style="color:var(--dos-danger)">連接失敗：${e.message}</span>`;
       toast('GitHub 連接失敗', 'error');
     }
   }
@@ -893,11 +893,11 @@
         headers: API.headers(state.githubToken),
         body: JSON.stringify({ sha: newCommit.sha, force: false })
       }).then(r => { if (!r.ok) throw new Error(`Ref update failed: ${r.status}`); return r.json(); });
-      statusEl.innerHTML = `<span style="color:var(--success)">✓ 已推送全部 ${Object.keys(fileContents).length} 個檔案（1 次 commit）</span>`;
+      statusEl.innerHTML = `<span style="color:var(--dos-success)">✓ 已推送全部 ${Object.keys(fileContents).length} 個檔案（1 次 commit）</span>`;
       toast(`已推送 ${Object.keys(fileContents).length} 個檔案至 GitHub（1 次 commit）`, 'success');
     } catch(e) {
       console.error('Push error:', e);
-      statusEl.innerHTML = `<span style="color:var(--danger)">⚠ 推送失敗：${e.message}</span>`;
+      statusEl.innerHTML = `<span style="color:var(--dos-danger)">⚠ 推送失敗：${e.message}</span>`;
       toast(`推送失敗：${e.message}`, 'error');
     }
   }
@@ -1068,7 +1068,7 @@
         console.warn(`Load failed for ${name}:`, e);
       }
     }
-    statusEl.innerHTML = `<span style="color:var(--success)">✓ 已拉取 ${loaded}/${files.length} 個檔案</span>`;
+    statusEl.innerHTML = `<span style="color:var(--dos-success)">✓ 已拉取 ${loaded}/${files.length} 個檔案</span>`;
     saveToLocalStorage();
     renderCurrentView();
     toast(`已從 GitHub 拉取 ${loaded} 個檔案`, 'success');
