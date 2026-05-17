@@ -4,8 +4,8 @@
     "_type": "CyberOccult.Data.NewsItemData",
     "id": "weather_clear",
     "type": "0",
-    "headline": "å¤©æ°£æ´æ",
-    "content": "ä»æ¥å¤©æ°£è¯å¥½ï¼æ´¾é£æçæ­£å¸¸ã",
+    "headline": "天氣晴朗",
+    "content": "今日天氣良好，派遣效率正常。",
     "priority": "5",
     "minDay": "1"
   },
@@ -14,8 +14,8 @@
     "_type": "CyberOccult.Data.NewsItemData",
     "id": "weather_glitch",
     "type": "0",
-    "headline": "æ¸æé¢¨æ´è­¦å ±",
-    "content": "åå¸ç¶²çµ¡åºç¾ç°å¸¸æ³¢åï¼æ´¾é£æåç -20%ã",
+    "headline": "數據風暴警報",
+    "content": "城市網路出現異常波動，派遣成功率 -20%。",
     "priority": "8",
     "minDay": "3"
   },
@@ -24,8 +24,8 @@
     "_type": "CyberOccult.Data.NewsItemData",
     "id": "weather_storm",
     "type": "0",
-    "headline": "è¨­æ½è­¦æ",
-    "content": "é¢¨æ´ä¾è¥²ï¼è©²ååæ´¾é£é¡å¤æ¶è 1 TUã",
+    "headline": "設施警戒",
+    "content": "風暴來襲，該區域派遣額外消耗 1 TU。",
     "priority": "9",
     "minDay": "5"
   },
@@ -34,8 +34,8 @@
     "_type": "CyberOccult.Data.NewsItemData",
     "id": "corp_01",
     "type": "2",
-    "headline": "å¹»åç§æè¡å¹å¤§è·",
-    "content": "ç¸½é¨ä½æ¼ä¸åçå¹»åç§ææéå¬å¸ä»æ¥è¡å¹é©é 23%ï¼å¼ç¼å¸å ´ææã",
+    "headline": "幻光科技股價大跌",
+    "content": "總部位於上城的幻光科技有限公司今日股價急降 23%，引發市場恐慌。",
     "priority": "7",
     "minDay": "1"
   },
@@ -44,8 +44,8 @@
     "_type": "CyberOccult.Data.NewsItemData",
     "id": "quest_result_01",
     "type": "1",
-    "headline": "å§è¨å®æå ±å",
-    "content": "ä½ çå°éæåå¾å»¢æå ´åæ¶äºåæçè»äºæ¶çã",
+    "headline": "委託完成報告",
+    "content": "你的小隊成功從廢料場回收了受損的軍事晶片。",
     "priority": "6",
     "minDay": "1"
   }

@@ -73,6 +73,36 @@
       "branch": "common"
     }
   ],
+  "story_timeline": [
+    {
+      "days": "Day 1 – 21",
+      "name": "共通路線",
+      "tag": "common",
+      "desc": "建立店鋪基礎，結識雙角色，處理日常維修訂單",
+      "progress": 80
+    },
+    {
+      "days": "Day 21 – 24",
+      "name": "分歧路線",
+      "tag": "common",
+      "desc": "根據玩家選擇決定情感傾向的隊友",
+      "progress": 30
+    },
+    {
+      "days": "Day 24 – 28",
+      "name": "澤維爾路線",
+      "tag": "xavier",
+      "desc": "異端審判官線·秘密與秩序的守護者",
+      "progress": 25
+    },
+    {
+      "days": "Day 24 – 28",
+      "name": "萊卡翁路線",
+      "tag": "lycaon",
+      "desc": "改造逃亡者線·野獸的忠誠與救贖",
+      "progress": 20
+    }
+  ],
   "endings": [
     {
       "id": "ending_01",

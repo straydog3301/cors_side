@@ -1,39 +1,30 @@
 [
   {
     "id": "n1",
-    "title": "éç¼åå",
-    "content": "MVP åªå â åç´åç â å§å®¹å¡«åãæçµå®ç¾ä¸»ç¾©ï¼åè®åè½åèµ·ä¾åè®å®å¥½çã",
+    "title": "開發原則",
+    "content": "MVP優先 → 垂直切片 → 內容填充。拒絕完美主義，先讓功能動起來再讓它好看。",
     "tags": [
-      "åå"
+      "原則"
     ],
-    "updated": "2024-01-15"
+    "updated": "2026-05-17"
   },
   {
     "id": "n2",
-    "title": "ç¶­ä¿®ç³»çµ± faultPoints æ ¼å¼",
-    "content": "faultPoints æ¯ Vector2[]ï¼å²å­ç¸å°æ¼ç¶­ä¿®åååé»çåº§æ¨ãè·¯å¾çºå°éæ²ç·ï¼è«ç¨çµå°åº§æ¨ã",
+    "title": "維修系統 faultPoints 格式",
+    "content": "faultPoints 是 Vector2[]，儲存相對於維修區域原點的座標。路徑為封閉曲線，請用絕對座標。",
     "tags": [
-      "æè¡",
-      "ç¶­ä¿®"
+      "技術",
+      "維修"
     ],
-    "updated": "2024-02-20"
+    "updated": "2026-05-17"
   },
   {
     "id": "n3",
-    "title": "æ´¾é£ç³»çµ± TU è¨ç®å¬å¼",
-    "content": "TUCost = BaseTUCost + (NodeDifficulty - CharStat) / ScalingFactorãè¨­è¨ difficultySTR æè«å°ç§è§è²åºç¤å±¬æ§ï¼ç¢ºä¿æ®éç¯é»æ¶è 1~2 TUï¼å°é£ç¯é»æ¶è 3~5 TUã",
+    "title": "派遣系統 TU 計算公式",
+    "content": "TUCost = BaseTUCost + (NodeDifficulty - CharStat) / ScalingFactor。設計 difficultySTR 時對照角色基礎屬性，確保普通節點消耗 1~2 TU，困難節點消耗 3~5 TU。",
     "tags": [
-      "æ¸å¼",
-      "æ´¾é£"
-    ],
-    "updated": "2024-03-01"
-  },
-  {
-    "id": "n1779005303842",
-    "title": "test",
-    "content": 123,
-    "tags": [
-      "test"
+      "數值",
+      "派遣"
     ],
     "updated": "2026-05-17"
   }

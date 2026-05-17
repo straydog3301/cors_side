@@ -150,25 +150,17 @@
     // Story Timeline
     const tlEl = document.getElementById('story-timeline');
     if (tlEl) {
-      const phases = [
-        { days:'Day 1 – 21', name:'共通路線', tag:'common', dot:'active',
-          desc:'建立店鋪基礎，結識雙角色，處理日常維修訂單' },
-        { days:'Day 21 – 24', name:'分歧路線', tag:'common',
-          desc:'根據玩家選擇決定情感傾向的隊友' },
-        { days:'Day 24 – 28', name:'Xavier 路線', tag:'xavier',
-          desc:'異端審判官線·秘密與秩序的守護者' },
-        { days:'Day 24 – 28', name:'萊卡翁路線', tag:'lycaon',
-          desc:'改造逃亡者線·野獸的忠誠與救贖' },
-      ];
-      tlEl.innerHTML = `<div class="tl-track">${phases.map(p => `
+      const stl = meta.story_timeline || [];
+      const tagLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
+      tlEl.innerHTML = `<div class="tl-track">${stl.length > 0 ? stl.map(p => `
         <div class="tl-node">
-          <div class="tl-dot ${p.dot||'pending'}"></div>
+          <div class="tl-dot ${p.progress > 0 ? 'active' : 'pending'}"></div>
           <div class="tl-content">
             <div class="tl-days">${p.days}</div>
             <div class="tl-name">${p.name}</div>
-            <span class="tl-route-tag tl-tag-${p.tag}">${p.tag==='common'?'共通':p.tag==='xavier'?'澤維爾':'萊卡翁'}路線</span>
+            <span class="tl-route-tag tl-tag-${p.tag}">${tagLabels[p.tag]||p.tag}路線</span>
           </div>
-        </div>`).join('')}</div>`;
+        </div>`).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.75rem">暫無故事時間線資料</div>'}</div>`;
     }
 
     // Character Routes
@@ -282,9 +274,10 @@
       </div>`).join('');
   }
 
-  // ── RENDER: World ──
+// ── RENDER: World ──
   function renderWorld() {
     const tl = GameData.meta.world_timeline;
+    const stl = GameData.meta.story_timeline;
     const endings = GameData.meta.endings;
 
     // Helper: get progress color class
@@ -298,8 +291,9 @@
     const editBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addWorldEvent()">+ 新增時間點</button></div>` : '';
 
     // World Timeline with progress bars
-    let tlHtml = editBtn + tl.map((item, i) => `
-      <div class="tl-item ${progressColor(item.progress)}" ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}')" style="cursor:pointer"` : ''}>
+    let html = `<h4 style="font-family:var(--font-title);font-size:0.85rem;color:var(--text);letter-spacing:2px;margin-bottom:16px;">世界觀時間線</h4>` +
+      editBtn + tl.map((item, i) => `
+      <div class="tl-item ${progressColor(item.progress)}" ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}' )" style="cursor:pointer"` : ``}>
         <div class="tl-marker ${progressColor(item.progress)}"></div>
         <div class="tl-year">${item.year}</div>
         <div class="tl-title">${item.title}</div>
@@ -307,14 +301,28 @@
         ${item.progress !== undefined ? `<div class="tl-progress-bar"><div class="tl-progress-fill ${progressColor(item.progress)}" style="width:${item.progress}%"></div></div><span class="tl-progress-label">${item.progress}%</span>` : ''}
       </div>`).join('');
 
+    // Story Timeline section
+    const storyEditBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addStoryTimeline()">+ 新增故事階段</button></div>` : '';
+    const tagLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
+    html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--text);letter-spacing:2px;margin-bottom:16px;">故事時間線</h4>` +
+      storyEditBtn + (stl||[]).map((item, i) => `
+      <div class="tl-item ${progressColor(item.progress)}" ${state.isEditMode ? `onclick="app.openEdit('story_timeline','${item.name}' )" style="cursor:pointer"` : ``}>
+        <div class="tl-marker ${progressColor(item.progress)}"></div>
+        <div class="tl-year">${item.days}</div>
+        <div class="tl-title">${item.name}</div>
+        <div class="tl-desc">${item.desc}</div>
+        ${item.progress !== undefined ? `<div class="tl-progress-bar"><div class="tl-progress-fill ${progressColor(item.progress)}" style="width:${item.progress}%"></div></div><span class="tl-progress-label">${item.progress}%</span>` : ''}
+        <span class="tl-route-tag tl-tag-${item.tag}" style="display:inline-block;padding:2px 8px;border-radius:99px;font-size:0.65rem;margin-top:4px">${tagLabels[item.tag]||item.tag}路線</span>
+      </div>`).join('');
+
     // Ending branches section
     const routeLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
     const routeColors = { common: 'cyan', xavier: 'gold', lycaon: 'magenta', secret: 'cyan' };
     const routeIcon = (r) => r === 'xavier' ? '⚖' : r === 'lycaon' ? '🐺' : r === 'secret' ? '🌀' : '📖';
 
-    tlHtml += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--text);letter-spacing:2px;margin-bottom:16px;">結局分支（共 7 條）</h4>
+    html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--text);letter-spacing:2px;margin-bottom:16px;">結局分支（共 7 條）</h4>
       <div class="endings-grid">` + endings.map((e) => `
-        <div class="ending-card ending-${routeColors[e.route]} ${progressColor(e.progress)}" ${state.isEditMode ? `onclick="app.openEdit('endings','${e.id}')" style="cursor:pointer"` : ''}>
+        <div class="ending-card ending-${routeColors[e.route]} ${progressColor(e.progress)}" ${state.isEditMode ? `onclick="app.openEdit('endings','${e.id}' )" style="cursor:pointer"` : ``}>
           <div class="ending-header">
             <span class="ending-route-icon">${routeIcon(e.route)}</span>
             <span class="ending-route-tag tag-${routeColors[e.route]}">${routeLabels[e.route]||e.route}</span>
@@ -325,7 +333,7 @@
           <div class="ending-progress-text">劇本完成度：${e.progress}%</div>
         </div>`).join('') + `</div>`;
 
-    document.getElementById('world-timeline').innerHTML = tlHtml;
+    document.getElementById('world-timeline').innerHTML = html;
   }
 
   // ── RENDER: Systems ──
@@ -390,6 +398,7 @@
     else if (type === 'systems') data = GameData.meta.systems.find(s => s.id === id);
     else if (type === 'phases') data = GameData.meta.phases.find(p => p.name === id);
     else if (type === 'world_timeline') data = GameData.meta.world_timeline.find(w => w.title === id);
+    else if (type === 'story_timeline') data = (GameData.meta.story_timeline||[]).find(s => s.name === id);
     else if (type === 'endings') data = GameData.meta.endings.find(e => e.id === id);
 
     if (!data) { toast('找不到資料', 'error'); return; }
@@ -412,16 +421,13 @@
       <div class="block-editor">
         ${fields.map(([k, v]) => `
           <div class="block-row">
-            <span class="block-handle" title="拖動">⋮⋮</span>
             <input class="block-type-select" value="${k}" readonly style="width:120px" title="欄位名（唯讀）">
             <textarea class="block-content-input" data-field="${k}" rows="${String(v).length > 80 ? 3 : 1}"
               oninput="app.markDirty()">${v}</textarea>
-            <button class="block-delete" onclick="app.deleteBlock(this)" title="刪除此欄">✕</button>
           </div>`).join('')}
-        <div class="block-add-row">
-          <button class="block-add-btn" onclick="app.addField()">＋ 新增欄位</button>
-          <button class="block-add-btn" onclick="app.addRecord()">＋ 新增一筆</button>
-          <button class="block-add-btn" onclick="app.showJsonEditor()">{} JSON 模式</button>
+        <div class="block-add-row" style="display:flex;gap:8px;margin-top:16px;align-items:center">
+          <button class="btn-primary btn-sm" onclick="app.showJsonEditor()" style="margin-right:auto">{} JSON 模式</button>
+          <button class="btn-danger btn-sm" onclick="app.deleteCurrentRecord()">🗑️ 刪除此筆</button>
         </div>
       </div>`;
 
@@ -572,6 +578,11 @@
       const idx = tl.findIndex(w => w.title === id);
       if (idx >= 0) GameData.meta = {...GameData.meta, world_timeline: [...tl.slice(0,idx), {...tl[idx], ...newData}, ...tl.slice(idx+1)]};
     }
+    else if (type === 'story_timeline') {
+      const st = GameData.meta.story_timeline || [];
+      const idx = st.findIndex(s => s.name === id);
+      if (idx >= 0) GameData.meta = {...GameData.meta, story_timeline: [...st.slice(0,idx), {...st[idx], ...newData}, ...st.slice(idx+1)]};
+    }
     else if (type === 'endings') {
       const en = GameData.meta.endings;
       const idx = en.findIndex(e => e.id === id);
@@ -583,11 +594,46 @@
     if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
     const title = prompt('時間點標題：');
     if (!title) return;
-    const event = { year: '2088', title, desc: '請填寫描述' };
+    const event = { year: '2088', title, desc: '請填寫描述', progress: 0, branch: 'common' };
     GameData.meta = {...GameData.meta, world_timeline: [...GameData.meta.world_timeline, event]};
     renderWorld();
     openEdit('world_timeline', title);
     markDirty();
+  }
+
+  function addStoryTimeline() {
+    if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
+    const name = prompt('故事階段名稱：');
+    if (!name) return;
+    const item = { days: 'Day ?', name, desc: '請填寫描述', tag: 'common', progress: 0 };
+    const arr = GameData.meta.story_timeline || [];
+    GameData.meta = {...GameData.meta, story_timeline: [...arr, item]};
+    renderWorld();
+    openEdit('story_timeline', name);
+    markDirty();
+  }
+
+  function deleteCurrentRecord() {
+    if (!confirm('確定要刪除此筆資料嗎？')) return;
+    const { type, id } = state.editTarget;
+    if (type === 'orders') { GameData.orders = GameData.orders.filter(o => o._file !== id); }
+    else if (type === 'events') { GameData.events = GameData.events.filter(e => e._file !== id); }
+    else if (type === 'items') { GameData.items = GameData.items.filter(i => i._file !== id); }
+    else if (type === 'emails') { GameData.emails = GameData.emails.filter(e => e.id !== id); }
+    else if (type === 'news') { GameData.news = GameData.news.filter(n => n._file !== id); }
+    else if (type === 'notes') { GameData.notes = GameData.notes.filter(n => n.id !== id); }
+    else if (type === 'characters') { GameData.meta = {...GameData.meta, characters: GameData.meta.characters.filter(c => c.id !== id)}; }
+    else if (type === 'systems') { GameData.meta = {...GameData.meta, systems: GameData.meta.systems.filter(s => s.id !== id)}; }
+    else if (type === 'phases') { GameData.meta = {...GameData.meta, phases: GameData.meta.phases.filter(p => p.name !== id)}; }
+    else if (type === 'world_timeline') { GameData.meta = {...GameData.meta, world_timeline: GameData.meta.world_timeline.filter(w => w.title !== id)}; }
+    else if (type === 'story_timeline') { GameData.meta = {...GameData.meta, story_timeline: (GameData.meta.story_timeline||[]).filter(s => s.name !== id)}; }
+    else if (type === 'endings') { GameData.meta = {...GameData.meta, endings: GameData.meta.endings.filter(e => e.id !== id)}; }
+    toast('已刪除', 'success');
+    state.editDirty = false;
+    document.getElementById('edit-dirty').style.display = 'none';
+    document.getElementById('edit-overlay').classList.add('hidden');
+    saveToLocalStorage();
+    renderCurrentView();
   }
 
   function newNote() {
@@ -854,7 +900,7 @@
     switchView, renderCurrentView,
     toggleEdit, openEdit, editCancel, editSave, markDirty,
     showJsonEditor, showBlockEditor, addField, addRecord, deleteBlock,
-    newNote, addWorldEvent, filterBacklog, openSettings,
+    newNote, addWorldEvent, addStoryTimeline, deleteCurrentRecord, filterBacklog, openSettings,
     renderFontSizeGrid, setFontSize,
     saveToken, toggleAutosave, toggleShowIds, resetLocal,
     connectGithub, pushToGithub, loadFromGithub,
