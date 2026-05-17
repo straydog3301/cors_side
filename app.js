@@ -483,9 +483,14 @@
       // Block mode
       textareaEls.forEach(el => {
         const field = el.dataset.field;
-        const val = el.value;
+        let val = el.value;
         // Try to parse numbers
-        state.editData[field] = isNaN(val) || val === '' ? val : (Number(val) || val);
+        val = isNaN(val) || val === '' ? val : (Number(val) || val);
+        // Auto-convert tags field: "tag1, tag2, tag3" → ["tag1","tag2","tag3"]
+        if (field === 'tags' && typeof val === 'string' && val.trim()) {
+          val = val.split(',').map(t => t.trim()).filter(Boolean);
+        }
+        state.editData[field] = val;
       });
     }
 
@@ -531,7 +536,7 @@
     const title = prompt('筆記標題：');
     if (!title) return;
     const id = 'n' + Date.now();
-    const note = { id, title, content: '', tags: ['新增'], updated: new Date().toISOString().split('T')[0] };
+    const note = { id, title, content: '', tags: [], updated: new Date().toISOString().split('T')[0] };
     GameData.notes = [...GameData.notes, note];
     renderNotes();
     openEdit('notes', id);
