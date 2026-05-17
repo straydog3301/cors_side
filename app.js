@@ -285,14 +285,47 @@
   // ── RENDER: World ──
   function renderWorld() {
     const tl = GameData.meta.world_timeline;
+    const endings = GameData.meta.endings;
+
+    // Helper: get progress color class
+    const progressColor = (pct) => {
+      if (pct >= 100) return 'done';
+      if (pct >= 50) return 'mid';
+      if (pct >= 1) return 'low';
+      return 'none';
+    };
+
     const editBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addWorldEvent()">+ 新增時間點</button></div>` : '';
-    document.getElementById('world-timeline').innerHTML = editBtn + tl.map((item, i) => `
-      <div class="tl-item" ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}')" style="cursor:pointer"` : ''}>
-        <div class="tl-marker"></div>
+
+    // World Timeline with progress bars
+    let tlHtml = editBtn + tl.map((item, i) => `
+      <div class="tl-item ${progressColor(item.progress)}" ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}')" style="cursor:pointer"` : ''}>
+        <div class="tl-marker ${progressColor(item.progress)}"></div>
         <div class="tl-year">${item.year}</div>
         <div class="tl-title">${item.title}</div>
         <div class="tl-desc">${item.desc}</div>
+        ${item.progress !== undefined ? `<div class="tl-progress-bar"><div class="tl-progress-fill ${progressColor(item.progress)}" style="width:${item.progress}%"></div></div><span class="tl-progress-label">${item.progress}%</span>` : ''}
       </div>`).join('');
+
+    // Ending branches section
+    const routeLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
+    const routeColors = { common: 'cyan', xavier: 'gold', lycaon: 'magenta', secret: 'cyan' };
+    const routeIcon = (r) => r === 'xavier' ? '⚖' : r === 'lycaon' ? '🐺' : r === 'secret' ? '🌀' : '📖';
+
+    tlHtml += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--text);letter-spacing:2px;margin-bottom:16px;">結局分支（共 7 條）</h4>
+      <div class="endings-grid">` + endings.map((e) => `
+        <div class="ending-card ending-${routeColors[e.route]} ${progressColor(e.progress)}" ${state.isEditMode ? `onclick="app.openEdit('endings','${e.id}')" style="cursor:pointer"` : ''}>
+          <div class="ending-header">
+            <span class="ending-route-icon">${routeIcon(e.route)}</span>
+            <span class="ending-route-tag tag-${routeColors[e.route]}">${routeLabels[e.route]||e.route}</span>
+          </div>
+          <div class="ending-name">${e.name}</div>
+          <div class="ending-desc">${e.desc}</div>
+          <div class="ending-progress-bar"><div class="ending-progress-fill ${progressColor(e.progress)}" style="width:${e.progress}%"></div></div>
+          <div class="ending-progress-text">劇本完成度：${e.progress}%</div>
+        </div>`).join('') + `</div>`;
+
+    document.getElementById('world-timeline').innerHTML = tlHtml;
   }
 
   // ── RENDER: Systems ──
@@ -328,18 +361,9 @@
 
   // ── EDIT MODE ──
   function toggleEdit() {
-    if (!state.isEditMode) {
-      if (state.editPassword) {
-        const pw = prompt('請輸入編輯密碼：');
-        if (!pw) return;
-        if (pw !== state.editPassword) { toast('密碼錯誤', 'error'); return; }
-      } else {
-        const pw = prompt('首次進入編輯模式，請設定編輯密碼（或留空跳過）：');
-        if (pw) {
-          state.editPassword = pw;
-          localStorage.setItem('cors_edit_password', pw);
-        }
-      }
+    if (!state.githubToken) {
+      toast('請先連接 GitHub（設定頁面）', 'info');
+      return;
     }
     state.isEditMode = !state.isEditMode;
     const icon = document.getElementById('edit-btn-icon');
@@ -366,6 +390,7 @@
     else if (type === 'systems') data = GameData.meta.systems.find(s => s.id === id);
     else if (type === 'phases') data = GameData.meta.phases.find(p => p.name === id);
     else if (type === 'world_timeline') data = GameData.meta.world_timeline.find(w => w.title === id);
+    else if (type === 'endings') data = GameData.meta.endings.find(e => e.id === id);
 
     if (!data) { toast('找不到資料', 'error'); return; }
 
@@ -547,6 +572,11 @@
       const idx = tl.findIndex(w => w.title === id);
       if (idx >= 0) GameData.meta = {...GameData.meta, world_timeline: [...tl.slice(0,idx), {...tl[idx], ...newData}, ...tl.slice(idx+1)]};
     }
+    else if (type === 'endings') {
+      const en = GameData.meta.endings;
+      const idx = en.findIndex(e => e.id === id);
+      if (idx >= 0) GameData.meta = {...GameData.meta, endings: [...en.slice(0,idx), {...en[idx], ...newData}, ...en.slice(idx+1)]};
+    }
   }
 
   function addWorldEvent() {
@@ -576,15 +606,42 @@
   function openSettings() { switchView('settings'); }
   function loadSettings() {
     document.getElementById('setting-gh-token').value = state.githubToken;
-    document.getElementById('setting-edit-password').value = state.editPassword;
     document.getElementById('toggle-autosave').checked = state.autosave;
     document.getElementById('toggle-show-ids').checked = state.showIds;
+    renderFontSizeGrid();
   }
   function saveToken(v) { state.githubToken = v; localStorage.setItem('cors_gh_token', v); toast('Token 已儲存至 localStorage', 'success'); }
-  function saveEditPassword(v) { state.editPassword = v; localStorage.setItem('cors_edit_password', v); toast('編輯密碼已設定', 'success'); }
   function toggleAutosave(v) { state.autosave = v; localStorage.setItem('cors_autosave', v); toast('已' + (v?'啟用':'停用') + '自動儲存', 'info'); }
   function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_ids', v); renderCurrentView(); }
   function resetLocal() { if (!confirm('確定要清除所有本地變更嗎？')) return; GameData.reset(); localStorage.removeItem('cors_local_data'); state.localModified = false; renderCurrentView(); toast('已重置', 'info'); }
+
+  // ── Font Size ──
+  const FONT_SIZES = [
+    { label: '極小', value: '12px' },
+    { label: '小', value: '13px' },
+    { label: '標準', value: '14px' },
+    { label: '大', value: '15px' },
+    { label: '特大', value: '16px' },
+    { label: '極大', value: '18px' },
+  ];
+
+  function renderFontSizeGrid() {
+    const el = document.getElementById('font-size-grid');
+    if (!el) return;
+    const current = localStorage.getItem('cors_font_size') || '14px';
+    el.innerHTML = FONT_SIZES.map(fs => `
+      <button class="font-size-btn${fs.value === current ? ' active' : ''}" onclick="app.setFontSize('${fs.value}')">
+        <span class="font-size-preview" style="font-size:${fs.value}">Aa</span>
+        <span class="font-size-label">${fs.label}</span>
+      </button>`).join('');
+  }
+
+  function setFontSize(val) {
+    localStorage.setItem('cors_font_size', val);
+    document.documentElement.style.fontSize = val;
+    renderFontSizeGrid();
+    toast('字體大小已變更為 ' + val, 'success');
+  }
 
   // ── GitHub sync ──
   async function connectGithub() {
@@ -763,6 +820,10 @@
       btn.addEventListener('click', () => switchView(btn.dataset.view));
     });
 
+    // Restore font size
+    const savedFontSize = localStorage.getItem('cors_font_size');
+    if (savedFontSize) document.documentElement.style.fontSize = savedFontSize;
+
     // Try reconnect GitHub if token saved
     if (state.githubToken) {
       fetch('https://api.github.com/user', { headers: API.headers(state.githubToken) })
@@ -794,7 +855,8 @@
     toggleEdit, openEdit, editCancel, editSave, markDirty,
     showJsonEditor, showBlockEditor, addField, addRecord, deleteBlock,
     newNote, addWorldEvent, filterBacklog, openSettings,
-    saveToken, saveEditPassword, toggleAutosave, toggleShowIds, resetLocal,
+    renderFontSizeGrid, setFontSize,
+    saveToken, toggleAutosave, toggleShowIds, resetLocal,
     connectGithub, pushToGithub, loadFromGithub,
     saveAll, saveToLocalStorage
   };

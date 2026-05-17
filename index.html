@@ -63,7 +63,7 @@
         <div class="phase-progress-bar"><div class="phase-progress-fill" id="phase-progress-fill" style="width:40%"></div></div>
       </div>
       <div class="sidebar-footer-links">
-        <a href="https://github.com/straydog3301/cors" target="_blank" class="footer-link">📁 CORS Repo</a>
+        <a href="https://straydog3301.github.io/cors_demo/" target="_blank" class="footer-link">🎮 Demo</a>
         <a href="https://github.com/straydog3301/cors_side" target="_blank" class="footer-link">🌐 網站原始碼</a>
       </div>
     </div>
@@ -196,18 +196,13 @@
 
           <div class="settings-panel">
             <h3>🔌 GitHub 連接</h3>
-            <div class="field-group">
-              <label>Personal Access Token</label>
-              <input type="password" id="setting-gh-token" placeholder="ghp_..." onchange="window.app.saveToken(this.value)">
-              <small>需要 repo + pages 權限。Token 僅保存在本機瀏覽器 localStorage。</small>
-            </div>
-            <div class="field-group">
-              <label>編輯密碼（可選）</label>
-              <input type="password" id="setting-edit-password" placeholder="設定編輯模式密碼" onchange="window.app.saveEditPassword(this.value)">
-              <small>設定後，進入編輯模式需要輸入此密碼。</small>
-            </div>
-            <button class="btn-primary" onclick="window.app.connectGithub()">連接 GitHub</button>
-            <div class="connect-status" id="connect-status"></div>
+<div class="field-group">
+                <label>Personal Access Token</label>
+                <input type="password" id="setting-gh-token" placeholder="ghp_..." onchange="window.app.saveToken(this.value)">
+                <small>需要 repo + pages 權限。Token 僅保存在本機瀏覽器 localStorage。</small>
+              </div>
+              <button class="btn-primary" onclick="window.app.connectGithub()">連接 GitHub</button>
+              <div class="connect-status" id="connect-status"></div>
           </div>
 
           <div class="settings-panel">
@@ -236,6 +231,12 @@
             </label>
             <hr style="border-color:#333;margin:16px 0">
             <button class="btn-danger btn-sm" onclick="if(confirm('確定清除所有本地變更？'))window.app.resetLocal()">🗑️ 重置本地資料</button>
+          </div>
+
+          <div class="settings-panel">
+            <h3>🔤 字體大小</h3>
+            <div class="font-size-grid" id="font-size-grid"></div>
+            <small style="color:var(--muted);font-size:0.7rem;display:block;margin-top:8px">選擇字體級距後立即生效，會儲存在瀏覽器。</small>
           </div>
 
         </div>
