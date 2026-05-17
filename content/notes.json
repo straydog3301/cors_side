@@ -3,36 +3,21 @@
     "id": "n1",
     "title": "開發原則",
     "content": "MVP 優先 → 垂直切片 → 內容填充。拒絕完美主義，先讓功能動起來再讓它好看。",
-    "tags": [
-      "原則"
-    ],
+    "tags": ["原則"],
     "updated": "2024-01-15"
   },
   {
     "id": "n2",
     "title": "維修系統 faultPoints 格式",
     "content": "faultPoints 是 Vector2[]，儲存相對於維修區域原點的座標。路徑為封閉曲線，請用絕對座標。",
-    "tags": [
-      "技術",
-      "維修"
-    ],
+    "tags": ["技術", "維修"],
     "updated": "2024-02-20"
   },
   {
     "id": "n3",
     "title": "派遣系統 TU 計算公式",
     "content": "TUCost = BaseTUCost + (NodeDifficulty - CharStat) / ScalingFactor。設計 difficultySTR 時請對照角色基礎屬性，確保普通節點消耗 1~2 TU，困難節點消耗 3~5 TU。",
-    "tags": [
-      "數值",
-      "派遣"
-    ],
+    "tags": ["數值", "派遣"],
     "updated": "2024-03-01"
-  },
-  {
-    "id": "n1779000578918",
-    "title": "測試",
-    "content": "這是一則測試訊息",
-    "tags": "新增",
-    "updated": "2026-05-17"
   }
 ]
