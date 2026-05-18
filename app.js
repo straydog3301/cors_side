@@ -19,6 +19,10 @@
     backlogTab: 'orders',
     backlogFilter: '',
     worldFilter: '',       // world view search filter
+    githubHasNewContent: false,
+    githubDirty: false,    // local edits not yet pushed
+    lastSyncSha: null,     // SHA we last successfully pushed (or initial load)
+    lastSeenSha: null,     // Latest SHA we've learned about
   };
 
   // ── GitHub API helpers ──
@@ -493,7 +497,13 @@
     overlay.classList.remove('hidden');
   }
 
-  function markDirty() { state.editDirty = true; document.getElementById('edit-dirty').style.display = ''; }
+  function markDirty() {
+    state.editDirty = true;
+    document.getElementById('edit-dirty').style.display = '';
+    // Track local edit timestamp so we know if user has unsynced changes
+    localStorage.setItem('cors-edit-ts', String(Date.now()));
+    state.githubDirty = true;
+  }
 
   function showJsonEditor() {
     const body = document.getElementById('edit-body');
@@ -806,11 +816,33 @@
 
   // ── SETTINGS ──
   function openSettings() { switchView('settings'); }
+  function renderRestoreSnapshots() {
+    const container = document.getElementById('restore-snapshot-list');
+    if (!container) return;
+    const snaps = getSnapshots();
+    if (!snaps.length) {
+      container.innerHTML = `<div style="padding:16px;text-align:center;color:var(--dos-gray);font-size:0.75rem">尚無本機快照<br><small>成功推送後會自動保存</small></div>`;
+      return;
+    }
+    container.innerHTML = snaps.map((s, i) => {
+      const date = new Date(s.ts).toLocaleString('zh-TW', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+      return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--dos-dark);border:1px solid var(--dos-border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.65rem;color:var(--dos-amber);font-family:var(--font-mono)">${escapeHtml(s.sha)}</div>
+          <div style="font-size:0.7rem;margin-top:2px;word-break:break-word;color:var(--dos-white)">${escapeHtml(s.label || '')}</div>
+          <div style="font-size:0.6rem;color:var(--dos-gray)">${date}</div>
+        </div>
+        <button class="btn-sm btn-outline" onclick="if(confirm('確定要還原到此版本？')){app.restoreFromSnapshot(${i});app.editCancel();}">還原</button>
+      </div>`;
+    }).join('');
+  }
+
   function loadSettings() {
     document.getElementById('setting-gh-token').value = state.githubToken;
     document.getElementById('toggle-autosave').checked = state.autosave;
     document.getElementById('toggle-show-ids').checked = state.showIds;
     renderFontSizeGrid();
+    renderRestoreSnapshots();
   }
   function saveToken(v) { state.githubToken = v; localStorage.setItem('cors_gh_token', v); toast('Token 已儲存至 localStorage', 'success'); updateReadOnlyUI(); }
   function toggleAutosave(v) { state.autosave = v; localStorage.setItem('cors_autosave', v); toast('已' + (v?'啟用':'停用') + '自動儲存', 'info'); }
@@ -1007,12 +1039,62 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     }
   }
 
+  // Save snapshot to localStorage (max 5, newest first)
+  // Snapshot format: { sha, label, data, ts }
+  function saveSnapshotToStorage(sha, label, data) {
+    const KEY = 'cors-snapshots';
+    let snaps = [];
+    try { snaps = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e) {}
+    const entry = { sha, label, data, ts: Date.now() };
+    // Insert at front, keep max 5
+    snaps = [entry, ...snaps].slice(0, 5);
+    localStorage.setItem(KEY, JSON.stringify(snaps));
+  }
+
+  // Update the SHA of the pending snapshot (called after push succeeds)
+  function updateSnapshotSha(realSha) {
+    const KEY = 'cors-snapshots';
+    let snaps = [];
+    try { snaps = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e) {}
+    if (snaps.length && snaps[0].sha === '__pending__') {
+      snaps[0].sha = realSha;
+      localStorage.setItem(KEY, JSON.stringify(snaps));
+    }
+  }
+
+  // Get all snapshots (newest first)
+  function getSnapshots() {
+    const KEY = 'cors-snapshots';
+    try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e) { return []; }
+  }
+
+  // Restore from a localStorage snapshot (index or sha)
+  function restoreFromSnapshot(idxOrSha) {
+    const snaps = getSnapshots();
+    let snap;
+    if (typeof idxOrSha === 'number') {
+      snap = snaps[idxOrSha];
+    } else {
+      snap = snaps.find(s => s.sha === idxOrSha);
+    }
+    if (!snap) { toast('找不到指定的快照', 'error'); return; }
+    const { data } = snap;
+    if (!data) { toast('快照資料損壞', 'error'); return; }
+    Object.keys(data).forEach(k => { if (GameData[k] !== undefined) GameData[k] = data[k]; });
+    saveToLocalStorage();
+    renderCurrentView();
+    toast(`已還原至：${snap.sha} ${snap.label}`, 'success');
+  }
+
   async function pushToGithub() {
     if (!state.githubToken) { toast('請先連接 GitHub（設定頁面）', 'error'); return; }
     const repo = document.getElementById('setting-repo').value || 'straydog3301/cors_side';
     const statusEl = document.getElementById('sync-status');
     statusEl.textContent = '準備推送...';
+    const commitMsgInput = document.getElementById('setting-commit-msg')?.value?.trim() || `docs: sync via CORS Dev Panel`;
     const data = GameData.exportAll();
+    // Save snapshot with pending SHA (will update after push succeeds)
+    saveSnapshotToStorage('__pending__', commitMsgInput.split('\n')[0], { ...data });
     const fileContents = {
       'content/orders.json': JSON.stringify(data.orders, null, 2),
       'content/events.json': JSON.stringify(data.events, null, 2),
@@ -1089,6 +1171,15 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       }).then(r => { if (!r.ok) throw new Error(`Ref update failed: ${r.status}`); return r.json(); });
       statusEl.innerHTML = `<span style="color:var(--dos-success)">✓ 已推送全部 ${Object.keys(fileContents).length} 個檔案</span>`;
       toast(`已推送 ${Object.keys(fileContents).length} 個檔案至 GitHub`, 'success');
+
+      // Update pending snapshot with real SHA and update sync metadata
+      const realSha = newCommit.sha.substring(0, 8);
+      updateSnapshotSha(realSha);
+      setSyncMeta({ syncSha: newCommit.sha, editTs: null });
+      state.lastSyncSha = newCommit.sha;
+      state.githubDirty = false;
+      state.githubHasNewContent = false;
+      renderNewContentBadge();
 
       // Check GitHub Pages deployment status
       statusEl.innerHTML += `<br><span style="color:var(--dos-gray);font-size:0.7rem">⏳ 檢查 Pages 部署狀態...</span>`;
@@ -1303,6 +1394,12 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     saveToLocalStorage();
     renderCurrentView();
     toast(`已從 GitHub 拉取 ${loaded} 個檔案`, 'success');
+    // Manual pull clears dirty flag and updates sync state
+    const meta = getSyncMeta();
+    setSyncMeta({ syncSha: meta.seenSha || state.lastSeenSha, editTs: null });
+    state.githubDirty = false;
+    state.githubHasNewContent = false;
+    checkGithubNewContent();
   }
 
   // ── localStorage ──
@@ -1332,10 +1429,12 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     const saveBtn = document.getElementById('btn-save-top');
     const contentPanel = document.getElementById('settings-content-files');
     const devPanel = document.getElementById('settings-dev-mode');
+    const restorePanel = document.getElementById('settings-restore');
     if (editBtn) editBtn.style.display = hasToken ? '' : 'none';
     if (saveBtn) saveBtn.style.display = hasToken ? '' : 'none';
     if (contentPanel) contentPanel.style.display = hasToken ? '' : 'none';
     if (devPanel) devPanel.style.display = hasToken ? '' : 'none';
+    if (restorePanel) restorePanel.style.display = hasToken ? '' : 'none';
     // If user was in edit mode and becomes read-only, force exit
     if (!hasToken && state.isEditMode) {
       state.isEditMode = false;
@@ -1345,10 +1444,119 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     }
   }
 
+  // ── Sync tracking helpers ──
+  function getSyncMeta() {
+    return {
+      syncSha: localStorage.getItem('cors-sync-sha') || null,
+      seenSha: localStorage.getItem('cors-last-seen-sha') || null,
+      editTs: localStorage.getItem('cors-edit-ts') || null,
+    };
+  }
+  function setSyncMeta(opts) {
+    if (opts.syncSha !== undefined) {
+      opts.syncSha ? localStorage.setItem('cors-sync-sha', opts.syncSha) : localStorage.removeItem('cors-sync-sha');
+    }
+    if (opts.seenSha !== undefined) {
+      opts.seenSha ? localStorage.setItem('cors-last-seen-sha', opts.seenSha) : localStorage.removeItem('cors-last-seen-sha');
+    }
+    if (opts.editTs !== undefined) {
+      opts.editTs ? localStorage.setItem('cors-edit-ts', opts.editTs) : localStorage.removeItem('cors-edit-ts');
+    }
+  }
+  function isDirty() {
+    const m = getSyncMeta();
+    if (!m.editTs) return false;
+    // Has edits not yet synced if edit timestamp is newer than last push (or no push yet)
+    return !m.syncSha || m.editTs > m.syncSha;
+  }
+
+  // ── GitHub new-content badge ──
+  function renderNewContentBadge() {
+    const badge = document.getElementById('btn-new-content');
+    if (!badge) return;
+    badge.style.display = (state.githubToken && state.githubHasNewContent) ? '' : 'none';
+    if (state.githubHasNewContent && state.githubDirty) {
+      badge.classList.add('badge-warn');
+      badge.title = '⚠️ GitHub 有新內容（您的本地編輯尚未推送）';
+    } else {
+      badge.classList.remove('badge-warn');
+      badge.title = '🔔 GitHub 有新內容，點擊更新';
+    }
+  }
+
+  async function checkGithubNewContent() {
+    if (!state.githubToken) return;
+    const repo = document.getElementById('setting-repo')?.value || 'straydog3301/cors_side';
+    try {
+      const r = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=1&sha=main`, {
+        headers: API.headers(state.githubToken)
+      });
+      if (!r.ok) return;
+      const commits = await r.json();
+      if (!commits || !commits.length) return;
+      const latestSha = commits[0].sha;
+      const meta = getSyncMeta();
+      // Update lastSeenSha so we know what's on GitHub
+      setSyncMeta({ seenSha: latestSha });
+      state.lastSeenSha = latestSha;
+      // If we haven't seen this SHA before (or it's different from what we last noted) → new content
+      if (meta.seenSha !== latestSha) {
+        state.githubHasNewContent = true;
+        state.githubDirty = isDirty();
+        renderNewContentBadge();
+      }
+    } catch(e) { /* silent */ }
+  }
+
+  function handleNewContentAction() {
+    if (!state.githubHasNewContent) return;
+    const msg = state.githubDirty
+      ? '⚠️ GitHub 有新內容，但您的本地編輯尚未推送。\n\n「確定」會用 GitHub 內容覆蓋本地編輯（可透過「還原設定」救回）。\n「取消」則保留本地編輯，稍後再手動 pull。'
+      : '🔔 GitHub 有新內容，是否拉取並覆蓋本地資料？';
+    if (confirm(msg)) {
+      performPull(false);
+    }
+  }
+
+  async function performPull(forceDirty) {
+    // Load latest from GitHub API → write to localStorage → clear edit flag
+    const repo = document.getElementById('setting-repo')?.value || 'straydog3301/cors_side';
+    const files = ['orders','events','items','emails','news','notes','meta'];
+    let loaded = 0;
+    for (const name of files) {
+      try {
+        const file = await fetch(`https://api.github.com/repos/${repo}/contents/content/${name}.json`, { headers: API.headers(state.githubToken) });
+        if (!file.ok) continue;
+        const json = await file.json();
+        const content = base64Utf8Decode(json.content);
+        const data = JSON.parse(content);
+        GameData[name === 'meta' ? 'meta' : name] = data;
+        loaded++;
+      } catch(e) { /* skip */ }
+    }
+    if (loaded > 0) {
+      saveToLocalStorage();
+      renderCurrentView();
+    }
+    // Clear dirty flag and update sync state
+    const meta = getSyncMeta();
+    const newSha = meta.seenSha || state.lastSeenSha;
+    setSyncMeta({ syncSha: newSha, editTs: null });
+    state.githubDirty = false;
+    state.githubHasNewContent = false;
+    state.lastSyncSha = newSha;
+    renderNewContentBadge();
+    toast(`已從 GitHub 拉取 ${loaded} 個檔案`, 'success');
+  }
+
   // ── Init ──
   function init() {
-    // loadFromLocalStorage() removed — always load fresh from data.js or GitHub pull
-    // localStorage now manual-only via "從本機恢復" in Settings page
+    // Load persisted sync state
+    const meta = getSyncMeta();
+    state.lastSyncSha = meta.syncSha;
+    state.lastSeenSha = meta.seenSha;
+    state.githubDirty = isDirty();
+
     // Nav
     document.querySelectorAll('.nav-item').forEach(btn => {
       btn.addEventListener('click', () => switchView(btn.dataset.view));
@@ -1363,12 +1571,11 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
 
     // Apply read-only UI based on token presence
     updateReadOnlyUI();
+    renderNewContentBadge();
 
-    // Step 1: Load from GitHub Pages content/*.json (no token needed, public repo)
-    // This ensures all users see the latest content from GitHub
-    loadFromPagesContent().then(found => {
-      // Step 2: If GitHub Pages content loaded successfully, render immediately
-      // Step 3: Then try API with token if available (overwrites with fresher data)
+    // Step 1: All users load from GitHub Pages content/*.json (primary source, no token needed)
+    loadFromPagesContent().then(() => {
+      // Step 2: Token users → fetch user + pull from API
       if (state.githubToken) {
         fetch('https://api.github.com/user', { headers: API.headers(state.githubToken) })
           .then(r => r.ok ? r.json() : null)
@@ -1377,9 +1584,10 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
               document.getElementById('user-avatar').textContent = user.login.substring(0,2).toUpperCase();
               document.getElementById('user-name').textContent = user.login;
               document.getElementById('user-status').textContent = 'GitHub 已連接';
-              // Auto-pull latest content from GitHub API (more reliable than Pages cache)
+              // Pull latest + check for new content on GitHub
               loadFromGithubSilent().then(() => {
                 fetchDataHistory();
+                checkGithubNewContent(); // compares SHA and may show badge
               });
             }
           }).catch(() => {});
@@ -1404,9 +1612,10 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     toggleEdit, openEdit, editCancel, editSave, markDirty,
     showJsonEditor, showBlockEditor, addField, addRecord, deleteBlock,
     newNote, addCharacter, addWorldEvent, addStoryTimeline, addEnding, editStatKey, addStat, deleteStatKey, addPhase, addSystem, deleteCurrentRecord, filterBacklog, filterWorld, openSettings,
-    renderFontSizeGrid, setFontSize,
+    renderFontSizeGrid, setFontSize, renderRestoreSnapshots,
     saveToken, toggleAutosave, toggleShowIds, resetLocal,
     connectGithub, pushToGithub, loadFromGithub,
+    handleNewContentAction, performPull, getSnapshots, restoreFromSnapshot,
     saveAll, saveToLocalStorage,
     exportSheetJSON,
     restoreFromHistory, resetToDataJs

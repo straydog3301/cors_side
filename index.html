@@ -90,6 +90,7 @@
           💾
         </button>
         <button class="btn-icon mobile-nav-toggle" id="mobile-nav-toggle" onclick="toggleMobileNav()" title="選單">☰</button>
+        <button class="btn-icon" id="btn-new-content" onclick="window.app.handleNewContentAction()" title="" style="display:none">🔔</button>
         <button class="btn-icon desktop-only" onclick="window.app.openSettings()" title="設定">⚙️</button>
       </div>
     </header>
@@ -238,6 +239,17 @@
             </label>
             <hr style="border-color:#333;margin:16px 0">
             <button class="btn-danger btn-sm" onclick="if(confirm('確定清除所有本地變更？'))window.app.resetLocal()">🗑️ 重置本地資料</button>
+          </div>
+
+          <div class="settings-panel" id="settings-restore" style="display:none">
+            <h3>🔄 還原設定</h3>
+            <p class="settings-hint">從本機快照還原（推送前自動保存，最多 5 筆）。還原後可再編輯推送。</p>
+            <div id="restore-snapshot-list" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
+            <hr style="border-color:#333;margin:16px 0">
+            <div style="text-align:center">
+              <button class="btn-sm btn-outline" onclick="if(confirm('確定要清除所有本地快照？此操作無法復原。')){localStorage.removeItem('cors-snapshots');window.app.renderRestoreSnapshots();toast('已清除所有快照','info');}">🗑️ 清除所有快照</button>
+              <button class="btn-sm btn-danger" onclick="if(confirm('確定重置為 data.js 的內建預設資料？（編輯中的本地變更會遺失）')){app.resetToDataJs()}">💾 重置為 data.js 預設</button>
+            </div>
           </div>
 
           <div class="settings-panel">
