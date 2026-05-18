@@ -814,8 +814,7 @@
   }
   function saveToken(v) { state.githubToken = v; localStorage.setItem('cors_gh_token', v); toast('Token 已儲存至 localStorage', 'success'); }
   function toggleAutosave(v) { state.autosave = v; localStorage.setItem('cors_autosave', v); toast('已' + (v?'啟用':'停用') + '自動儲存', 'info'); }
-  function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_ids', v); renderCurrentView(); }
-  function resetLocal() { if (!confirm('確定要清除所有本地變更嗎？')) return; GameData.reset(); localStorage.removeItem('cors_local_data'); state.localModified = false; renderCurrentView(); toast('已重置', 'info'); }
+function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_ids', v); renderCurrentView(); }
 
   // ── Font Size ──
   const FONT_SIZES = [
@@ -831,7 +830,7 @@
   function renderFontSizeGrid() {
     const el = document.getElementById('font-size-grid');
     if (!el) return;
-    const current = localStorage.getItem('cors_font_size') || '14px';
+    const current = localStorage.getItem('cors_font_size') || '16px';
     el.innerHTML = FONT_SIZES.map(fs => `
       <button class="font-size-btn${fs.value === current ? ' active' : ''}" onclick="app.setFontSize('${fs.value}')">
         <span class="font-size-preview" style="font-size:${fs.value}">Aa</span>
@@ -844,6 +843,120 @@
     document.documentElement.style.fontSize = val;
     renderFontSizeGrid();
     toast('字體大小已變更為 ' + val, 'success');
+  }
+
+  // ── Data history (content commit snapshots) ──
+  let dataHistory = [];  // [{sha, message, date, files: {orders, events, items, emails, news, notes, meta}}]
+
+  async function fetchDataHistory() {
+    // Fetch last 5 commits that touched content/ from GitHub API
+    if (!state.githubToken) return;
+    const repo = document.getElementById('setting-repo')?.value || 'straydog3301/cors_side';
+    try {
+      const r = await fetch(`https://api.github.com/repos/${repo}/commits?path=content/&per_page=5&sha=main`, {
+        headers: API.headers(state.githubToken)
+      });
+      if (!r.ok) return;
+      const commits = await r.json();
+      dataHistory = [];
+      for (const commit of commits) {
+        const entry = {
+          sha: commit.sha.substring(0, 7),
+          message: commit.commit.message.split('\n')[0],
+          date: commit.commit.committer.date,
+          files: {}
+        };
+        // Fetch tree for this commit to get content files
+        const treeR = await fetch(commit.commit.tree.url, { headers: API.headers(state.githubToken) });
+        if (!treeR.ok) continue;
+        const tree = await treeR.json();
+        const contentFiles = tree.tree.filter(t => t.path.startsWith('content/') && t.path.endsWith('.json'));
+        for (const cf of contentFiles) {
+          try {
+            const blobR = await fetch(cf.url, { headers: API.headers(state.githubToken) });
+            if (!blobR.ok) continue;
+            const blob = await blobR.json();
+            const name = cf.path.replace('content/', '').replace('.json', '');
+            entry.files[name] = JSON.parse(base64Utf8Decode(blob.content));
+          } catch(e) { /* skip */ }
+        }
+        dataHistory.push(entry);
+      }
+    } catch(e) { console.warn('fetchDataHistory error:', e); }
+  }
+
+  function showResetPicker() {
+    // Show a simple overlay with commit options
+    const overlay = document.getElementById('edit-overlay');
+    const body = document.getElementById('edit-body');
+    const fname = document.getElementById('edit-file-name');
+    fname.textContent = '🔄 選擇要恢復的版本';
+    let html = `<div style="padding:12px;font-size:0.75rem;font-family:var(--font-mono);color:var(--dos-gray);margin-bottom:12px">data.js 僅作為初始載入與重置依據。以下列出最近 content/ 的 5 次 commit：</div>`;
+    html += `<div style="display:flex;flex-direction:column;gap:8px">`;
+    if (dataHistory.length === 0) {
+      html += `<div style="padding:20px;text-align:center;color:var(--dos-gray)">暫無歷史記錄（需連接 GitHub）</div>`;
+    } else {
+      for (const entry of dataHistory) {
+        const date = new Date(entry.date).toLocaleString('zh-TW', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+        const fileCount = Object.keys(entry.files).length;
+        html += `<button class="reset-picker-btn" onclick="app.restoreFromHistory('${entry.sha}')" style="text-align:left;padding:10px 12px;background:var(--dos-dark);border:1px solid var(--dos-border);color:var(--dos-white);cursor:pointer;border-radius:0;font-family:var(--font-mono)">
+          <div style="font-size:0.7rem;color:var(--dos-amber)">${entry.sha} — ${date}</div>
+          <div style="font-size:0.7rem;margin-top:4px;word-break:break-word">${escapeHtml(entry.message)}</div>
+          <div style="font-size:0.6rem;color:var(--dos-gray);margin-top:2px">${fileCount} 個內容檔案</div>
+        </button>`;
+      }
+    }
+    html += `</div>`;
+    html += `<div style="text-align:right;margin-top:16px"><button class="btn-sm btn-outline" onclick="app.editCancel()">取消</button></div>`;
+
+    // Also add a "reset to data.js (built-in)" fallback
+    html += `<hr style="border-color:var(--dos-border);margin:16px 0"><div style="text-align:center"><button class="btn-sm btn-danger" onclick="if(confirm('確定重置為 data.js 的內建預設資料？（編輯中的變更會遺失）')){app.resetToDataJs();app.editCancel();}">🗑️ 重置為 data.js 預設</button></div>`;
+
+    body.innerHTML = html;
+    overlay.classList.remove('hidden');
+  }
+
+  // Expose these later in the app object
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function restoreFromHistory(sha) {
+    const entry = dataHistory.find(e => e.sha === sha);
+    if (!entry) return;
+    for (const [name, data] of Object.entries(entry.files)) {
+      GameData[name === 'meta' ? 'meta' : name] = JSON.parse(JSON.stringify(data)); // deep clone
+    }
+    saveToLocalStorage();
+    document.getElementById('edit-overlay').classList.add('hidden');
+    renderCurrentView();
+    toast(`已恢復至 ${sha}（${Object.keys(entry.files).length} 個檔案）`, 'success');
+  }
+
+  function resetToDataJs() {
+    // Re-initialize from the original data.js global (read-only copy)
+    // We need to re-parse the data.js content — data.js is the IIFE bootstrap
+    // For now, clear localStorage and reload page
+    localStorage.removeItem('cors_local_data');
+    location.reload();
+  }
+  function resetLocalOrig() {
+    if (!confirm('確定要清除所有本地變更嗎？')) return;
+    GameData.reset();
+    localStorage.removeItem('cors_local_data');
+    state.localModified = false;
+    renderCurrentView();
+    toast('已重置', 'info');
+  }
+  function resetLocal() {
+    if (!state.githubToken) {
+      resetLocalOrig();
+      return;
+    }
+    showResetPicker();
   }
 
   // ── GitHub sync ──
@@ -859,6 +972,8 @@
       document.getElementById('user-avatar').textContent = user.login.substring(0,2).toUpperCase();
       document.getElementById('user-name').textContent = user.login;
       document.getElementById('user-status').textContent = 'GitHub 已連接';
+      // After manual connect, also fetch data history
+      fetchDataHistory();
       toast(`已連接 GitHub：${user.login}`, 'success');
     } catch(e) {
       document.getElementById('connect-status').innerHTML = `<span style="color:var(--dos-danger)">連接失敗：${e.message}</span>`;
@@ -930,11 +1045,12 @@
         })
       }).then(r => { if (!r.ok) throw new Error(`Tree creation failed: ${r.status}`); return r.json(); });
       // Step 4: Create commit
+      const commitMsg = document.getElementById('setting-commit-msg')?.value?.trim() || `docs: sync all data files via CORS Dev Panel\ntimestamp: ${new Date().toISOString()}`;
       const newCommit = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
         method: 'POST',
         headers: API.headers(state.githubToken),
         body: JSON.stringify({
-          message: `docs: sync all data files via CORS Dev Panel\n timestamp: ${new Date().toISOString()}`,
+          message: commitMsg,
           tree: newTree.sha,
           parents: [parentSha]
         })
@@ -1199,7 +1315,7 @@
     // Start with scanlines overlay on (dashboard is default view)
     document.body.classList.add('scanlines');
 
-    // Try reconnect GitHub if token saved
+    // Try reconnect GitHub if token saved — this is the primary data source
     if (state.githubToken) {
       fetch('https://api.github.com/user', { headers: API.headers(state.githubToken) })
         .then(r => r.ok ? r.json() : null)
@@ -1208,8 +1324,12 @@
             document.getElementById('user-avatar').textContent = user.login.substring(0,2).toUpperCase();
             document.getElementById('user-name').textContent = user.login;
             document.getElementById('user-status').textContent = 'GitHub 已連接';
-            // Auto-pull latest content from GitHub after connecting
-            loadFromGithubSilent();
+            // Auto-pull latest content from GitHub — this is the PRIMARY data source
+            // data.js is only used as fallback when offline
+            loadFromGithubSilent().then(() => {
+              // Also fetch data history for reset/rollback feature
+              fetchDataHistory();
+            });
           }
         }).catch(() => {});
     }
@@ -1236,7 +1356,8 @@
     saveToken, toggleAutosave, toggleShowIds, resetLocal,
     connectGithub, pushToGithub, loadFromGithub,
     saveAll, saveToLocalStorage,
-    exportSheetJSON
+    exportSheetJSON,
+    restoreFromHistory, resetToDataJs
   };
 
   document.addEventListener('DOMContentLoaded', init);

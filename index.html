@@ -214,7 +214,11 @@
               <label>Repo</label>
               <input type="text" id="setting-repo" value="straydog3301/cors_side">
             </div>
-            <p class="settings-hint">內容儲存在 <code>content/</code> 資料夾的 JSON 檔案中。編輯後可一鍵推送至 GitHub。</p>
+            <div class="field-group">
+              <label>Commit 訊息</label>
+              <input type="text" id="setting-commit-msg" placeholder="docs: sync data via CORS Dev Panel" value="docs: sync all data files via CORS Dev Panel">
+            </div>
+            <p class="settings-hint">推送內容會包含所有 content/*.json 與前端檔案（app.js, index.html, styles.css, data.js）。</p>
             <div class="field-group">
               <button class="btn-outline btn-sm" onclick="window.app.loadFromGithub()">↺ 從 GitHub 拉取最新</button>
               <button class="btn-outline btn-sm" onclick="window.app.pushToGithub()">↑ 推送變更至 GitHub</button>
