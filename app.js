@@ -943,6 +943,31 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     localStorage.removeItem('cors_local_data');
     location.reload();
   }
+
+  // ── Load content from GitHub Pages (no token needed) ──
+  async function loadFromPagesContent() {
+    // Fetch 7 content JSON files from GitHub Pages static serve
+    // This is the PRIMARY data source for all users (no token required)
+    const files = ['orders','events','items','emails','news','notes','meta'];
+    const base = '/cors_side/content/';  // relative to GitHub Pages root
+    let loaded = 0;
+    for (const name of files) {
+      try {
+        const r = await fetch(`${base}${name}.json`);
+        if (!r.ok) continue;
+        const data = await r.json();
+        GameData[name === 'meta' ? 'meta' : name] = data;
+        loaded++;
+      } catch(e) { /* skip */ }
+    }
+    if (loaded > 0) {
+      saveToLocalStorage();
+      renderCurrentView();
+    }
+    // Returns whether any files were loaded (for init() to know if rendering happened)
+    return loaded > 0;
+  }
+
   function resetLocalOrig() {
     if (!confirm('確定要清除所有本地變更嗎？')) return;
     GameData.reset();
@@ -1339,24 +1364,27 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     // Apply read-only UI based on token presence
     updateReadOnlyUI();
 
-    // Try reconnect GitHub if token saved — this is the primary data source
-    if (state.githubToken) {
-      fetch('https://api.github.com/user', { headers: API.headers(state.githubToken) })
-        .then(r => r.ok ? r.json() : null)
-        .then(user => {
-          if (user) {
-            document.getElementById('user-avatar').textContent = user.login.substring(0,2).toUpperCase();
-            document.getElementById('user-name').textContent = user.login;
-            document.getElementById('user-status').textContent = 'GitHub 已連接';
-            // Auto-pull latest content from GitHub — this is the PRIMARY data source
-            // data.js is only used as fallback when offline
-            loadFromGithubSilent().then(() => {
-              // Also fetch data history for reset/rollback feature
-              fetchDataHistory();
-            });
-          }
-        }).catch(() => {});
-    }
+    // Step 1: Load from GitHub Pages content/*.json (no token needed, public repo)
+    // This ensures all users see the latest content from GitHub
+    loadFromPagesContent().then(found => {
+      // Step 2: If GitHub Pages content loaded successfully, render immediately
+      // Step 3: Then try API with token if available (overwrites with fresher data)
+      if (state.githubToken) {
+        fetch('https://api.github.com/user', { headers: API.headers(state.githubToken) })
+          .then(r => r.ok ? r.json() : null)
+          .then(user => {
+            if (user) {
+              document.getElementById('user-avatar').textContent = user.login.substring(0,2).toUpperCase();
+              document.getElementById('user-name').textContent = user.login;
+              document.getElementById('user-status').textContent = 'GitHub 已連接';
+              // Auto-pull latest content from GitHub API (more reliable than Pages cache)
+              loadFromGithubSilent().then(() => {
+                fetchDataHistory();
+              });
+            }
+          }).catch(() => {});
+      }
+    });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', e => {
