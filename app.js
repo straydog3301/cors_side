@@ -158,8 +158,7 @@
       const addBtn = edit ? `<button class="btn-sm btn-outline dash-edit-btn" onclick="app.addSystem()" style="float:right">+ 新增</button>` : '';
       sysEl.innerHTML = (addBtn ? `<div style="text-align:right;margin-bottom:4px">${addBtn}</div>` : '') + systems.map(s => `
         <div class="system-item" ${edit ? `onclick="app.openEdit('systems','${s.id}')" style="cursor:pointer"` : ''}>
-          <span class="system-icon">${s.icon}</span>
-          <span class="system-name">${s.name}</span>
+          <span class="system-label"><span class="system-icon">${s.icon}</span><span class="system-name">${s.name}</span></span>
           <span class="system-desc">${s.desc}</span>
         </div>`).join('');
     }
