@@ -821,11 +821,12 @@
   // ── Font Size ──
   const FONT_SIZES = [
     { label: '極小', value: '12px' },
-    { label: '小', value: '13px' },
-    { label: '標準', value: '14px' },
-    { label: '大', value: '15px' },
-    { label: '特大', value: '16px' },
-    { label: '極大', value: '18px' },
+    { label: '小', value: '14px' },
+    { label: '標準', value: '16px' },
+    { label: '大', value: '18px' },
+    { label: '特大', value: '20px' },
+    { label: '超大', value: '22px' },
+    { label: '極大', value: '24px' },
   ];
 
   function renderFontSizeGrid() {
