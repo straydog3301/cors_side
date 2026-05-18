@@ -457,7 +457,7 @@ input, textarea { font-family: var(--font-main); }
 }
 .system-item:last-child { border-bottom: none; }
 .system-icon { font-size: 0.85rem; }
-.system-name { font-weight: 600; }
+.system-name { font-weight: 600; min-width: 90px; flex-shrink: 0; }
 .system-desc {
   font-size: 0.65rem;
   color: var(--dos-gray);
