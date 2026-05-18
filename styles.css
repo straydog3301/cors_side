@@ -272,7 +272,9 @@ input, textarea { font-family: var(--font-main); }
 }
 .btn-icon:hover { border-color: var(--dos-green); color: var(--dos-green); background: rgba(51,255,51,0.05); }
 
-.commit-status { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--dos-gray); }
+/* Mobile: keep nav toggle hidden on desktop, show on mobile */
+.mobile-nav-toggle { display: none; }
+.desktop-only { display: flex; }
 .commit-dot { width: 6px; height: 6px; border-radius: 0; background: var(--dos-green); }
 
 /* ════════════════════════════════════════════════════
@@ -589,6 +591,8 @@ input, textarea { font-family: var(--font-main); }
   .dash-hero { padding: 14px; }
   .dash-hero-title { font-size: 1rem; }
   .endings-grid { grid-template-columns: 1fr; }
+  .desktop-only { display: none !important; }
+  .mobile-nav-toggle { display: flex !important; }
 }
 @media (max-width: 480px) {
   #views { padding: 8px; }
@@ -1041,3 +1045,77 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--dos-gree
 .font-size-btn.active { border-color: var(--dos-green); background: rgba(51,255,51,0.04); }
 .font-size-preview { font-family: var(--font-main); font-weight: 700; color: var(--dos-white); }
 .font-size-label { font-family: var(--font-mono); font-size: 0.58rem; color: var(--dos-gray); }
+
+/* ════════════════════════════════════════════════════
+   MOBILE NAV DRAWER
+   ════════════════════════════════════════════════════ */
+#mobile-nav-overlay {
+  position: fixed; inset: 0; z-index: 998;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(2px);
+  transition: opacity 0.2s ease;
+}
+#mobile-nav-overlay.hidden { display: none; }
+
+#mobile-nav-drawer {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 260px;
+  z-index: 999;
+  background: var(--dos-dark);
+  border-right: 1px solid var(--dos-border);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease;
+  overflow-y: auto;
+}
+#mobile-nav-drawer.hidden {
+  transform: translateX(-100%);
+  display: flex; /* override display:none so CSS transition works */
+}
+#mobile-nav-drawer:not(.hidden) {
+  transform: translateX(0);
+}
+
+.mobile-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--dos-border);
+}
+.mobile-nav-title {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--dos-green);
+  letter-spacing: 2px;
+}
+
+.mobile-nav-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 8px;
+}
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--dos-gray);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: left;
+  transition: var(--transition);
+  width: 100%;
+  font-family: var(--font-main);
+}
+.mobile-nav-item:hover { background: rgba(51,255,51,0.04); color: var(--dos-white); border-color: var(--dos-border); }
+.mobile-nav-item.active {
+  background: rgba(51,255,51,0.06);
+  color: var(--dos-green);
+  border-color: rgba(51,255,51,0.2);
+}
+.mobile-nav-item .nav-icon { font-size: 1rem; }

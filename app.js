@@ -1241,3 +1241,38 @@
 
   document.addEventListener('DOMContentLoaded', init);
 })();
+
+/* ════════════════════════════════════════════════════
+   MOBILE NAV — standalone functions (no app dependency)
+   ════════════════════════════════════════════════════ */
+function toggleMobileNav() {
+  const drawer = document.getElementById('mobile-nav-drawer');
+  const overlay = document.getElementById('mobile-nav-overlay');
+  const isOpen = !drawer.classList.contains('hidden');
+  if (isOpen) { closeMobileNav(); }
+  else { openMobileNav(); }
+}
+function openMobileNav() {
+  const drawer = document.getElementById('mobile-nav-drawer');
+  const overlay = document.getElementById('mobile-nav-overlay');
+  drawer.classList.remove('hidden');
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeMobileNav() {
+  const drawer = document.getElementById('mobile-nav-drawer');
+  const overlay = document.getElementById('mobile-nav-overlay');
+  drawer.classList.add('hidden');
+  overlay.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+function mobileNavGo(view) {
+  if (window.app && window.app.switchView) {
+    window.app.switchView(view);
+  }
+  // Update active state on mobile nav items
+  document.querySelectorAll('.mobile-nav-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === view);
+  });
+  closeMobileNav();
+}

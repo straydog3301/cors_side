@@ -89,7 +89,8 @@
         <button class="btn-icon" onclick="window.app.saveAll()" title="儲存變更">
           💾
         </button>
-        <button class="btn-icon" onclick="window.app.openSettings()" title="設定">⚙️</button>
+        <button class="btn-icon mobile-nav-toggle" id="mobile-nav-toggle" onclick="toggleMobileNav()" title="選單">☰</button>
+        <button class="btn-icon desktop-only" onclick="window.app.openSettings()" title="設定">⚙️</button>
       </div>
     </header>
 
@@ -245,6 +246,39 @@
       </section>
 
     </div><!-- /views -->
+
+    <!-- ═══ MOBILE NAV ═══ -->
+    <div id="mobile-nav-overlay" class="hidden" onclick="closeMobileNav()"></div>
+    <div id="mobile-nav-drawer" class="hidden">
+      <div class="mobile-nav-header">
+        <span class="mobile-nav-title">☰ 導覽</span>
+        <button class="btn-icon" onclick="closeMobileNav()" title="關閉">✕</button>
+      </div>
+      <nav class="mobile-nav-body" id="mobile-nav-body">
+        <button class="mobile-nav-item active" data-view="dashboard" onclick="mobileNavGo('dashboard')">
+          <span class="nav-icon">📊</span> Dashboard
+        </button>
+        <button class="mobile-nav-item" data-view="characters" onclick="mobileNavGo('characters')">
+          <span class="nav-icon">👤</span> 角色
+        </button>
+        <button class="mobile-nav-item" data-view="world" onclick="mobileNavGo('world')">
+          <span class="nav-icon">🌃</span> 世界觀
+        </button>
+        <button class="mobile-nav-item" data-view="systems" onclick="mobileNavGo('systems')">
+          <span class="nav-icon">⚙️</span> 系統
+        </button>
+        <button class="mobile-nav-item" data-view="database" onclick="mobileNavGo('database')">
+          <span class="nav-icon">🗃️</span> 資料庫
+        </button>
+        <button class="mobile-nav-item" data-view="notes" onclick="mobileNavGo('notes')">
+          <span class="nav-icon">📝</span> 開發筆記
+        </button>
+        <button class="mobile-nav-item" data-view="settings" onclick="mobileNavGo('settings')" style="margin-top:8px;border-top:1px solid var(--dos-border);padding-top:12px">
+          <span class="nav-icon">⚡</span> 設定
+        </button>
+      </nav>
+    </div>
+
   </main>
 
 </div><!-- /app -->
