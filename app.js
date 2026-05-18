@@ -812,7 +812,7 @@
     document.getElementById('toggle-show-ids').checked = state.showIds;
     renderFontSizeGrid();
   }
-  function saveToken(v) { state.githubToken = v; localStorage.setItem('cors_gh_token', v); toast('Token 已儲存至 localStorage', 'success'); }
+  function saveToken(v) { state.githubToken = v; localStorage.setItem('cors_gh_token', v); toast('Token 已儲存至 localStorage', 'success'); updateReadOnlyUI(); }
   function toggleAutosave(v) { state.autosave = v; localStorage.setItem('cors_autosave', v); toast('已' + (v?'啟用':'停用') + '自動儲存', 'info'); }
 function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_ids', v); renderCurrentView(); }
 
@@ -972,7 +972,8 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       document.getElementById('user-avatar').textContent = user.login.substring(0,2).toUpperCase();
       document.getElementById('user-name').textContent = user.login;
       document.getElementById('user-status').textContent = 'GitHub 已連接';
-      // After manual connect, also fetch data history
+      // After manual connect, update UI to show edit features + fetch history
+      updateReadOnlyUI();
       fetchDataHistory();
       toast(`已連接 GitHub：${user.login}`, 'success');
     } catch(e) {
@@ -1299,6 +1300,26 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     toast('已儲存至本機', 'success');
   }
 
+  // ── Read-only UI mode (no GitHub token) ──
+  function updateReadOnlyUI() {
+    const hasToken = !!state.githubToken;
+    const editBtn = document.getElementById('btn-edit-toggle');
+    const saveBtn = document.getElementById('btn-save-top');
+    const contentPanel = document.getElementById('settings-content-files');
+    const devPanel = document.getElementById('settings-dev-mode');
+    if (editBtn) editBtn.style.display = hasToken ? '' : 'none';
+    if (saveBtn) saveBtn.style.display = hasToken ? '' : 'none';
+    if (contentPanel) contentPanel.style.display = hasToken ? '' : 'none';
+    if (devPanel) devPanel.style.display = hasToken ? '' : 'none';
+    // If user was in edit mode and becomes read-only, force exit
+    if (!hasToken && state.isEditMode) {
+      state.isEditMode = false;
+      document.body.classList.remove('edit-mode');
+      const icon = document.getElementById('edit-btn-icon');
+      if (icon) icon.textContent = '✏️';
+    }
+  }
+
   // ── Init ──
   function init() {
     // loadFromLocalStorage() removed — always load fresh from data.js or GitHub pull
@@ -1314,6 +1335,9 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
 
     // Start with scanlines overlay on (dashboard is default view)
     document.body.classList.add('scanlines');
+
+    // Apply read-only UI based on token presence
+    updateReadOnlyUI();
 
     // Try reconnect GitHub if token saved — this is the primary data source
     if (state.githubToken) {

@@ -86,7 +86,7 @@
         <button class="btn-icon" id="btn-edit-toggle" title="編輯模式" onclick="window.app.toggleEdit()">
           <span id="edit-btn-icon">✏️</span>
         </button>
-        <button class="btn-icon" onclick="window.app.saveAll()" title="儲存變更">
+        <button class="btn-icon" id="btn-save-top" onclick="window.app.saveAll()" title="儲存變更">
           💾
         </button>
         <button class="btn-icon mobile-nav-toggle" id="mobile-nav-toggle" onclick="toggleMobileNav()" title="選單">☰</button>
@@ -208,7 +208,7 @@
               <div class="connect-status" id="connect-status"></div>
           </div>
 
-          <div class="settings-panel">
+          <div class="settings-panel" id="settings-content-files">
             <h3>📁 內容檔案</h3>
             <div class="field-group">
               <label>Repo</label>
@@ -226,7 +226,7 @@
             <div id="sync-status" class="sync-status"></div>
           </div>
 
-          <div class="settings-panel">
+          <div class="settings-panel" id="settings-dev-mode">
             <h3>🎨 開發者模式</h3>
             <label class="toggle-row">
               <span>顯示資料庫 ID</span>
