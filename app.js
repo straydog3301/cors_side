@@ -260,15 +260,24 @@
       const type = item._type ? item._type.split('.').pop() : '';
       const _keyFor = { orders:'_file', events:'_file', items:'_file', news:'_file', emails:'id', characters:'id', notes:'id' };
       const _k = _keyFor[state.backlogTab] || 'id';
-      const editAttrs = state.isEditMode
-        ? `onclick="app.openEdit('${state.backlogTab}','${item[_k] || item._file || item.id}')" draggable="true" ondragstart="app.dragStart(event,${idx})" ondragover="app.dragOver(event,this)" ondragleave="app.dragLeave(event,this)" ondrop="app.drop(event,${idx})" ondragend="app.dragEnd(event,this)" data-drag-idx="${idx}"`
+      const itemId = item[_k] || item._file || item.id;
+      const editBtn = state.isEditMode
+        ? `<button class="bk-edit-btn" onclick="app.openEdit('${state.backlogTab}','${itemId}')">✎ 編輯</button>`
+        : '';
+      const dragHandle = state.isEditMode
+        ? `<span class="drag-handle" draggable="true" ondragstart="app.dragStart(event,${idx})" ondragend="app.dragEnd(event,this)" title="拖曳移動">☰</span>`
+        : '';
+      const dragHandlers = state.isEditMode
+        ? `ondragover="app.dragOver(event)" ondragleave="app.dragLeave(event)" ondrop="app.drop(event,${idx})"`
         : '';
       return `
-        <div class="backlog-item" ${editAttrs}>
+        <div class="backlog-item" data-drag-idx="${idx}" ${dragHandlers}>
+          ${dragHandle}
           <span class="bk-id">${state.showIds ? id : id.substring(0,12)}</span>
           <span class="bk-title">${name}</span>
           ${meta ? `<span class="bk-meta">${meta}</span>` : ''}
           <span class="bk-tag">${type}</span>
+          ${editBtn}
         </div>`;
     }).join('');
   }
@@ -383,8 +392,8 @@
   function renderSystems() {
     const sys = GameData.meta.systems;
     const addBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addSystem()">+ 新增系統</button></div>` : '';
-    document.getElementById('systems-grid').innerHTML = addBtn + sys.map(s => `
-      <div class="sys-card" ${state.isEditMode ? `onclick="app.openEdit('systems','${s.id}')"` : ''}>
+    const sysCard = s => `
+      <div class="sys-card">
         <div class="sys-card-header">
           <span class="sys-icon">${s.icon}</span>
           <span class="sys-num">${s.num}</span>
@@ -394,21 +403,29 @@
         </div>
         <p class="sys-desc">${s.desc}</p>
         <div class="sys-tags">${s.tags.map(t => `<span class="sys-tag">${t}</span>`).join('')}</div>
-      </div>`).join('');
+        ${state.isEditMode ? `<div class="card-edit-bar">
+          <button class="btn-sm" onclick="app.openEdit('systems','${s.id}')">✎ 編輯</button>
+        </div>` : ''}
+      </div>`;
+    document.getElementById('systems-grid').innerHTML = addBtn + sys.map(sysCard).join('');
   }
 
   // ── RENDER: Notes ──
   function renderNotes() {
     const notes = GameData.notes;
-    document.getElementById('notes-list').innerHTML = notes.map(n => `
-      <div class="note-card" ${state.isEditMode ? `onclick="app.openEdit('notes','${n.id}')"` : ''}>
+        const noteCard = n => `
+      <div class="note-card">
         <div class="note-title">${n.title}</div>
         <div class="note-content">${n.content}</div>
         <div class="note-footer">
           ${n.tags.map(t => `<span class="note-tag">${t}</span>`).join('')}
           <span class="note-date">${n.updated}</span>
+          ${state.isEditMode ? `<div class="card-edit-bar">
+            <button class="btn-sm" onclick="app.openEdit('notes','${n.id}')">✎ 編輯</button>
+          </div>` : ''}
         </div>
-      </div>`).join('') + (state.isEditMode ? `<div class="note-card" style="border-style:dashed;opacity:0.5" onclick="app.newNote()"><div class="note-title">+ 新增筆記</div></div>` : '');
+      </div>`;
+    document.getElementById('notes-list').innerHTML = notes.map(noteCard).join('') + (state.isEditMode ? `<div class="note-card" style="border-style:dashed;opacity:0.5" onclick="app.newNote()"><div class="note-title">+ 新增筆記</div></div>` : '');
   }
 
   // ── Drag & Drop Reorder (edit mode) ──
@@ -421,24 +438,29 @@
     _dragTab = state.backlogTab;
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', idx);
-    // Dim the dragged item slightly
-    e.target.style.opacity = '0.4';
+    // Dim the dragged item (navigate up if event from inner handle)
+    const item = e.target.closest ? e.target.closest('.backlog-item') : e.target;
+    if (item) item.style.opacity = '0.4';
   }
 
-  function dragOver(e, el) {
+  function dragOver(e) {
     if (!state.isEditMode) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    el.classList.add('drag-over');
+    const item = e.target.closest ? e.target.closest('.backlog-item') : e.target;
+    if (item) item.classList.add('drag-over');
   }
 
-  function dragLeave(e, el) {
-    el.classList.remove('drag-over');
+  function dragLeave(e) {
+    const item = e.target.closest ? e.target.closest('.backlog-item') : e.target;
+    if (item) item.classList.remove('drag-over');
   }
 
   function drop(e, targetIdx) {
     if (!state.isEditMode || _dragSrcIdx === null || _dragSrcIdx === targetIdx) return;
     e.preventDefault();
+    const item = e.target.closest ? e.target.closest('.backlog-item') : e.target;
+    if (item) item.classList.remove('drag-over');
     const tab = state.backlogTab || _dragTab;
     // Get the correct array
     let arr;
@@ -462,9 +484,9 @@
     toast('已移動項目', 'info');
   }
 
-  function dragEnd(e, el) {
-    el.style.opacity = '';
-    el.classList.remove('drag-over');
+  function dragEnd(e) {
+    document.querySelectorAll('.backlog-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+    document.querySelectorAll('.backlog-item[style*="opacity"]').forEach(el => el.style.opacity = '');
     _dragSrcIdx = null;
     _dragTab = null;
   }
