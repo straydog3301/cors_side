@@ -261,7 +261,7 @@
       const _keyFor = { orders:'_file', events:'_file', items:'_file', news:'_file', emails:'id', characters:'id', notes:'id' };
       const _k = _keyFor[state.backlogTab] || 'id';
       return `
-        <div class="backlog-item" onclick="app.openEdit('${state.backlogTab}','${item[_k] || item._file || item.id}')">
+        <div class="backlog-item" ${state.isEditMode ? `onclick="app.openEdit('${state.backlogTab}','${item[_k] || item._file || item.id}')"` : ''}>
           <span class="bk-id">${state.showIds ? id : id.substring(0,12)}</span>
           <span class="bk-title">${name}</span>
           ${meta ? `<span class="bk-meta">${meta}</span>` : ''}
@@ -380,7 +380,7 @@
   function renderSystems() {
     const sys = GameData.meta.systems;
     document.getElementById('systems-grid').innerHTML = sys.map(s => `
-      <div class="sys-card" onclick="app.openEdit('systems','${s.id}')">
+      <div class="sys-card" ${state.isEditMode ? `onclick="app.openEdit('systems','${s.id}')"` : ''}>
         <div class="sys-card-header">
           <span class="sys-icon">${s.icon}</span>
           <span class="sys-num">${s.num}</span>
@@ -397,14 +397,14 @@
   function renderNotes() {
     const notes = GameData.notes;
     document.getElementById('notes-list').innerHTML = notes.map(n => `
-      <div class="note-card" onclick="app.openEdit('notes','${n.id}')">
+      <div class="note-card" ${state.isEditMode ? `onclick="app.openEdit('notes','${n.id}')"` : ''}>
         <div class="note-title">${n.title}</div>
         <div class="note-content">${n.content}</div>
         <div class="note-footer">
           ${n.tags.map(t => `<span class="note-tag">${t}</span>`).join('')}
           <span class="note-date">${n.updated}</span>
         </div>
-      </div>`).join('') + `<div class="note-card" style="border-style:dashed;opacity:0.5" onclick="app.newNote()"><div class="note-title">+ 新增筆記</div></div>`;
+      </div>`).join('') + (state.isEditMode ? `<div class="note-card" style="border-style:dashed;opacity:0.5" onclick="app.newNote()"><div class="note-title">+ 新增筆記</div></div>` : '');
   }
 
   // ── EDIT MODE ──
