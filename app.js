@@ -1561,6 +1561,10 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     state.lastSeenSha = meta.seenSha;
     state.githubDirty = isDirty();
 
+    // Show loading overlay immediately — cleared after first data load
+    const loadingEl = document.getElementById('loading-overlay');
+    if (loadingEl) loadingEl.classList.remove('hidden');
+
     // Nav
     document.querySelectorAll('.nav-item').forEach(btn => {
       btn.addEventListener('click', () => switchView(btn.dataset.view));
@@ -1579,6 +1583,14 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
 
     // Step 1: All users load from GitHub Pages content/*.json (primary source, no token needed)
     loadFromPagesContent().then(() => {
+      // Restore local edits BEFORE first render so saved changes appear immediately
+      loadFromLocalStorage();
+      renderCurrentView();
+
+      // Hide loading overlay
+      const loadingEl = document.getElementById('loading-overlay');
+      if (loadingEl) loadingEl.classList.add('hidden');
+
       // Step 2: Token users → fetch user + pull from API
       if (state.githubToken) {
         fetch('https://api.github.com/user', { headers: API.headers(state.githubToken) })
@@ -1605,9 +1617,8 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       }
     });
 
-    renderCurrentView();
-    // Restore local edits from localStorage after initial render
-    loadFromLocalStorage();
+    // Initial render is deferred until after loadFromPagesContent resolves
+    // to avoid briefly flashing data.js default content before the fetch completes
   }
 
   // Expose API
