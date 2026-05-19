@@ -1644,8 +1644,20 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     renderCurrentView();
     toast(`已從 GitHub 拉取 ${loaded} 個檔案`, 'success');
     // Manual pull clears dirty flag and updates sync state
-    const meta = getSyncMeta();
-    setSyncMeta({ syncSha: meta.seenSha || state.lastSeenSha, editTs: null });
+    // Fetch the latest commit SHA so seenSha is accurate for next reload
+    let latestSha = state.lastSeenSha;
+    try {
+      const r2 = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=1&sha=main`, {
+        headers: API.headers(state.githubToken)
+      });
+      if (r2.ok) {
+        const commits2 = await r2.json();
+        if (commits2 && commits2.length) latestSha = commits2[0].sha;
+      }
+    } catch(e) { /* fallback to lastSeenSha */ }
+    setSyncMeta({ syncSha: latestSha, seenSha: latestSha, editTs: null });
+    state.lastSyncSha = latestSha;
+    state.lastSeenSha = latestSha;
     state.githubDirty = false;
     state.githubHasNewContent = false;
     checkGithubNewContent();
@@ -1737,32 +1749,26 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     if (!state.githubToken) return;
     const repo = document.getElementById('setting-repo')?.value || 'straydog3301/cors_side';
     try {
-      // Fetch multiple commits to filter out self-pushes
-      const r = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=5&sha=main`, {
+      // Fetch the latest commit to compare SHA — no user filtering needed.
+      // pushToGithub() and performPull() both update seenSha, so a simple
+      // comparison is enough: if the latest SHA differs from seenSha, someone
+      // else pushed new content since we last synced.
+      const r = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=1&sha=main`, {
         headers: API.headers(state.githubToken)
       });
       if (!r.ok) return;
       const commits = await r.json();
       if (!commits || !commits.length) return;
       const meta = getSyncMeta();
-      // Update lastSeenSha to the absolute latest SHA (including our own pushes)
       const latestSha = commits[0].sha;
-      setSyncMeta({ seenSha: latestSha });
-      state.lastSeenSha = latestSha;
-      // Filter out commits made by the current user
-      const selfLogin = state.githubUser || '';
-      const otherCommits = commits.filter(c => {
-        const author = c.author?.login || c.commit?.author?.name || '';
-        return author !== selfLogin;
-      });
-      // Only notify if there's a new commit from ANOTHER developer
-      if (otherCommits.length > 0) {
-        const latestOtherSha = otherCommits[0].sha;
-        if (meta.seenSha !== latestOtherSha) {
-          state.githubHasNewContent = true;
-          state.githubDirty = isDirty();
-          renderNewContentBadge();
-        }
+      // IMPORTANT: Do NOT update seenSha here — it would always overwrite to
+      // latestSha and silence the bell. Only update seenSha when the user
+      // actually pushes or pulls (pushToGithub / performPull handle that).
+      // If seenSha differs from latestSha → new content is available.
+      if (meta.seenSha !== latestSha) {
+        state.githubHasNewContent = true;
+        state.githubDirty = isDirty();
+        renderNewContentBadge();
       }
     } catch(e) { /* silent */ }
   }
@@ -1800,12 +1806,22 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       renderCurrentView();
     }
     // Clear dirty flag and update sync state
-    const meta = getSyncMeta();
-    const newSha = meta.seenSha || state.lastSeenSha;
-    setSyncMeta({ syncSha: newSha, editTs: null });
+    // Fetch the latest commit SHA so seenSha is accurate for next reload
+    let latestSha = state.lastSeenSha;
+    try {
+      const r2 = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=1&sha=main`, {
+        headers: API.headers(state.githubToken)
+      });
+      if (r2.ok) {
+        const commits2 = await r2.json();
+        if (commits2 && commits2.length) latestSha = commits2[0].sha;
+      }
+    } catch(e) { /* fallback to lastSeenSha */ }
+    setSyncMeta({ syncSha: latestSha, seenSha: latestSha, editTs: null });
+    state.lastSyncSha = latestSha;
+    state.lastSeenSha = latestSha;
     state.githubDirty = false;
     state.githubHasNewContent = false;
-    state.lastSyncSha = newSha;
     renderNewContentBadge();
     toast(`已從 GitHub 拉取 ${loaded} 個檔案`, 'success');
   }
