@@ -123,7 +123,7 @@
     // Phases
     const phasesEl = document.getElementById('phases-list');
     if (phasesEl) {
-      const addBtn = edit ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-outline dash-edit-btn" onclick="app.addPhase()">+ 新增階段</button></div>` : '';
+      const addBtn = edit ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-primary" onclick="app.addPhase()">+ 新增階段</button></div>` : '';
       phasesEl.innerHTML = addBtn + meta.phases.map(p => `
         <div class="phase-item ${p.status}" ${edit ? `onclick="app.openEdit('phases','${p.name.replace(/'/g,"\\'")}')"` : ''}>
           <div class="phase-status-dot ${p.status}"></div>
@@ -159,7 +159,7 @@
     const sysEl = document.getElementById('systems-list');
     if (sysEl) {
       const systems = meta.systems || [];
-      const addBtn = edit ? `<button class="btn-sm btn-outline dash-edit-btn" onclick="app.addSystem()" style="float:right">+ 新增</button>` : '';
+      const addBtn = edit ? `<button class="btn-sm btn-primary" onclick="app.addSystem()" style="float:right">+ 新增</button>` : '';
       sysEl.innerHTML = (addBtn ? `<div style="text-align:right;margin-bottom:4px">${addBtn}</div>` : '') + systems.map(s => `
         <div class="system-item" ${edit ? `onclick="app.openEdit('systems','${s.id}')" style="cursor:pointer"` : ''}>
           <span class="system-label"><span class="system-icon">${s.icon}</span><span class="system-name">${s.name}</span></span>
@@ -172,7 +172,7 @@
     if (tlEl) {
       const stl = meta.story_timeline || [];
       const tagLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
-      const addBtn = edit ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-outline dash-edit-btn" onclick="app.addStoryTimeline()">+ 新增</button></div>` : '';
+      const addBtn = edit ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-primary" onclick="app.addStoryTimeline()">+ 新增</button></div>` : '';
       tlEl.innerHTML = addBtn + `<div class="tl-track">${stl.length > 0 ? stl.map(p => `
         <div class="tl-node" ${edit ? `onclick="app.openEdit('story_timeline','${p.name.replace(/'/g,"\\'")}')" style="cursor:pointer"` : ''}>
           <div class="tl-dot ${progressColor(p.progress)}"></div>
@@ -204,7 +204,7 @@
     const wcEl = document.getElementById('world-cards');
     if (wcEl) {
       const wt = meta.world_timeline||[];
-      const addBtn = edit ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-outline dash-edit-btn" onclick="app.addWorldEvent()">+ 新增</button></div>` : '';
+      const addBtn = edit ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-primary" onclick="app.addWorldEvent()">+ 新增</button></div>` : '';
       wcEl.innerHTML = addBtn + wt.map(w => `
         <div class="world-card" ${edit ? `onclick="app.openEdit('world_timeline','${w.title.replace(/'/g,"\\'")}')" style="cursor:pointer"` : ''}>
           <div class="world-card-year">${w.year}</div>
@@ -296,7 +296,7 @@
   function renderCharacters() {
     const chars = GameData.meta.characters;
     const el = document.getElementById('chars-layout');
-    const editHeader = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addCharacter()">+ 新增角色</button></div>` : '';
+    const editHeader = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-primary" onclick="app.addCharacter()">+ 新增角色</button></div>` : '';
 
     const charCard = (c, idx) => {
       const dragHandle = state.isEditMode
@@ -354,7 +354,7 @@
     const filteredTl = tl.map((item, i) => ({ item, origIdx: i })).filter(({ item }) => matches(item));
     const filteredStl = (stl||[]).map((item, i) => ({ item, origIdx: i })).filter(({ item }) => matches(item));
 
-    const editBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addWorldEvent()">+ 新增時間點</button></div>` : '';
+    const editBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-primary" onclick="app.addWorldEvent()">+ 新增時間點</button></div>` : '';
     const filterHtml = `<div style="margin-bottom:16px"><input type="text" id="world-filter-input" placeholder="🔍 搜尋時間線、結局..." value="${state.worldFilter||''}" oninput="app.filterWorld(this.value)" style="width:100%;padding:8px 12px;background:var(--dos-black);border:1px solid var(--dos-border);color:var(--dos-white);font-family:var(--font-mono);font-size:0.75rem"></div>`;
 
     let html = filterHtml;
@@ -372,7 +372,7 @@
       </div>`).join('');
 
     // Story Timeline
-    const storyEditBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addStoryTimeline()">+ 新增故事階段</button></div>` : '';
+    const storyEditBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-primary" onclick="app.addStoryTimeline()">+ 新增故事階段</button></div>` : '';
     const tagLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
     html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">故事時間線</h4>` +
       storyEditBtn + filteredStl.map(({ item, origIdx }) => `
@@ -390,7 +390,7 @@
     const routeLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
     const routeColors = { common: 'cyan', xavier: 'gold', lycaon: 'magenta', secret: 'cyan' };
     const routeIcon = (r) => r === 'xavier' ? '⚖' : r === 'lycaon' ? '🐺' : r === 'secret' ? '🌀' : '📖';
-    const endingAddBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-outline" onclick="app.addEnding()">+ 新增結局</button></div>` : '';
+    const endingAddBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-primary" onclick="app.addEnding()">+ 新增結局</button></div>` : '';
     const filteredEndings = endings.filter(matches);
     html += endingAddBtn + `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">結局分支（共 ${filteredEndings.length} 條）</h4>
       <div class="endings-grid">` + filteredEndings.map((e) => `
@@ -411,7 +411,7 @@
   // ── RENDER: Systems ──
   function renderSystems() {
     const sys = GameData.meta.systems;
-    const addBtn = state.isEditMode ? `<div class="sys-add-btn"><button class="btn-sm btn-outline" onclick="app.addSystem()">+ 新增系統</button></div>` : '';
+    const addBtn = state.isEditMode ? `<div class="sys-add-btn"><button class="btn-sm btn-primary" onclick="app.addSystem()">+ 新增系統</button></div>` : '';
     const sysRow = (s, idx) => {
       const dragHandle = state.isEditMode
         ? `<span class="drag-handle" draggable="true" ondragstart="app.reorderDragStart(event,'systems',${idx})" ondragend="app.reorderDragEnd(event)" title="拖曳調整順序" style="margin-right:8px;align-self:flex-start;padding-top:2px;flex-shrink:0">☰</span>`
@@ -465,7 +465,7 @@
         </div>
       </div>`;
     };
-    document.getElementById('notes-list').innerHTML = notes.map((n, i) => noteCard(n, i)).join('') + (state.isEditMode ? `<div class="note-card" style="border-style:dashed;opacity:0.5" onclick="app.newNote()"><div class="note-title">+ 新增筆記</div></div>` : '');
+    document.getElementById('notes-list').innerHTML = notes.map((n, i) => noteCard(n, i)).join('');
   }
 
   // ── Drag & Drop Reorder (edit mode) ──
