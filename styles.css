@@ -807,7 +807,7 @@ input, textarea { font-family: var(--font-main); }
 /* ════════════════════════════════════════════════════
    NOTES
    ════════════════════════════════════════════════════ */
-.notes-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.notes-header { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 14px; }
 .notes-list { display: flex; flex-direction: column; gap: 10px; }
 .note-card {
   background: var(--dos-panel);

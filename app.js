@@ -191,11 +191,11 @@
       const chars = meta.characters || [];
       crEl.innerHTML = chars.map(c => `
         <div class="char-route-card" ${edit ? `onclick="app.openEdit('characters','${c.id}')" style="cursor:pointer"` : ''}>
-          <div class="char-route-avatar char-avatar-${c.id}">${c.icon || (c.id==='xavier'?'⚖':c.id==='lycaon'?'🐺':'👤')}</div>
+          <div class="char-route-avatar" style="border-color:${c.color||'#33ff33'}">${c.icon || (c.id==='xavier'?'⚖':c.id==='lycaon'?'🐺':'👤')}</div>
           <div class="char-route-info">
             <div class="char-route-name">${c.name_zh} · ${c.name_en}</div>
             <div class="char-route-role">${c.role}</div>
-            <div class="char-route-tags">${(c.tags||[]).map(t => `<span class="char-tag char-tag-${c.id}">${t}</span>`).join('')}</div>
+            <div class="char-route-tags" style="color:${c.color||'var(--dos-gray)'}">${(c.tags||[]).map(t => `<span class="char-tag" style="border-color:${c.color||'var(--dos-border)'};color:${c.color||'var(--dos-gray)'}">${t}</span>`).join('')}</div>
           </div>
         </div>`).join('');
     }
@@ -310,11 +310,11 @@
         ${dragHandle}
         <div style="flex:1;min-width:0">
           <div class="char-page-header">
-            <div class="char-avatar ${c.id}">${c.icon || (c.id === 'xavier' ? '⚖️' : c.id === 'lycaon' ? '🐺' : '👤')}</div>
+            <div class="char-avatar ${c.id}" style="border-color:${c.color||'var(--dos-green)'}">${c.icon || (c.id === 'xavier' ? '⚖️' : c.id === 'lycaon' ? '🐺' : '👤')}</div>
             <div>
               <div>
                 <span class="char-page-name-zh">${c.name_zh}</span>
-                <span class="char-page-name-en ${c.id}">${c.name_en} / ${c.route}</span>
+                <span class="char-page-name-en" style="color:${c.color||'var(--dos-green)'}">${c.name_en} / ${c.route}</span>
               </div>
               <div class="char-page-role">${c.role}</div>
             </div>
@@ -322,7 +322,7 @@
           </div>
           <div class="char-page-body">
             <p class="char-page-desc">${c.description}</p>
-            <div class="char-tags">${c.tags.map(t => `<span class="char-tag">${t}</span>`).join('')}</div>
+            <div class="char-tags">${c.tags.map(t => `<span class="char-tag" style="border-color:${c.color||'var(--dos-border)'};color:${c.color||'var(--dos-gray)'}">${t}</span>`).join('')}</div>
           </div>
         </div>
       </div>`;
@@ -911,7 +911,7 @@
   function addCharacter() {
     if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
     const newId = 'char_' + Date.now();
-    const char = { id: newId, name_zh: '新角色', name_en: 'New Character', route: 'COMMON_ROUTE', icon: '👤', role: '請填寫角色定位', description: '請填寫角色描述', tags: ['標籤1'] };
+    const char = { id: newId, name_zh: '新角色', name_en: 'New Character', route: 'COMMON_ROUTE', icon: '👤', color: '#33ff33', role: '請填寫角色定位', description: '請填寫角色描述', tags: ['標籤1'] };
     GameData.meta = {...GameData.meta, characters: [...(GameData.meta.characters||[]), char]};
     markDirty();
     renderCharacters();
