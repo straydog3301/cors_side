@@ -697,7 +697,7 @@ input, textarea { font-family: var(--font-main); }
   width: 1px;
   background: var(--dos-border);
 }
-.tl-item { position: relative; margin-bottom: 20px; }
+.tl-item { display: flex; align-items: flex-start; flex-wrap: wrap; position: relative; margin-bottom: 20px; }
 .tl-marker {
   position: absolute; left: -21px; top: 4px;
   width: 12px; height: 12px;
@@ -813,6 +813,8 @@ input, textarea { font-family: var(--font-main); }
   padding: 16px 18px;
   transition: var(--transition);
   cursor: pointer;
+  display: flex;
+  align-items: flex-start;
 }
 .note-card:hover { border-color: rgba(51,255,51,0.2); }
 .note-title { font-size: 0.85rem; font-weight: 700; color: var(--dos-white); margin-bottom: 6px; }
@@ -1236,5 +1238,11 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--dos-gree
 /* ── CHARACTER DRAG & DROP ── */
 .char-page-card.drag-over {
   border-top: 2px solid var(--dos-cyan, #00ffaa);
+  background: rgba(0, 255, 170, 0.04);
+}
+
+/* ── GENERIC DRAG TARGET (systems / world / story / notes) ── */
+.drag-target {
+  outline: 2px solid var(--dos-cyan, #00ffaa);
   background: rgba(0, 255, 170, 0.04);
 }

@@ -338,23 +338,32 @@
     const endings = GameData.meta.endings;
     const filterQ = (state.worldFilter || '').toLowerCase();
 
-    const editBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addWorldEvent()">+ 新增時間點</button></div>` : '';
-    const filterHtml = `<div style="margin-bottom:16px"><input type="text" id="world-filter-input" placeholder="🔍 搜尋時間線、結局..." value="${state.worldFilter||''}" oninput="app.filterWorld(this.value)" style="width:100%;padding:8px 12px;background:var(--dos-black);border:1px solid var(--dos-border);color:var(--dos-white);font-family:var(--font-mono);font-size:0.75rem"></div>`;
-
-    // Filter helpers
     const matches = (item) => {
       if (!filterQ) return true;
       return JSON.stringify(item).toLowerCase().includes(filterQ);
     };
 
+    const dragHandleHtml = (section, origIdx) => state.isEditMode
+      ? `<span class="drag-handle" draggable="true" ondragstart="app.reorderDragStart(event,'${section}',${origIdx})" ondragend="app.reorderDragEnd(event)" title="拖曳調整順序" style="margin-right:6px;align-self:flex-start;padding-top:2px;flex-shrink:0">☰</span>`
+      : '';
+    const dragHandlers = (section, origIdx) => state.isEditMode
+      ? `ondragover="app.reorderDragOver(event)" ondragleave="app.reorderDragLeave(event)" ondrop="app.reorderDrop(event,${origIdx})"`
+      : '';
+
+    // Preserve original array index even when filtered (data-idx for drag-drop)
+    const filteredTl = tl.map((item, i) => ({ item, origIdx: i })).filter(({ item }) => matches(item));
+    const filteredStl = (stl||[]).map((item, i) => ({ item, origIdx: i })).filter(({ item }) => matches(item));
+
+    const editBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addWorldEvent()">+ 新增時間點</button></div>` : '';
+    const filterHtml = `<div style="margin-bottom:16px"><input type="text" id="world-filter-input" placeholder="🔍 搜尋時間線、結局..." value="${state.worldFilter||''}" oninput="app.filterWorld(this.value)" style="width:100%;padding:8px 12px;background:var(--dos-black);border:1px solid var(--dos-border);color:var(--dos-white);font-family:var(--font-mono);font-size:0.75rem"></div>`;
+
     let html = filterHtml;
 
-    // World Timeline with progress bars
-    const filteredTl = tl.filter(matches);
-
+    // World Timeline
     html += `<h4 style="font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">世界觀時間線</h4>` +
-      editBtn + filteredTl.map((item, i) => `
-      <div class="tl-item ${progressColor(item.progress)}" ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}' )" style="cursor:pointer"` : ``}>
+      editBtn + filteredTl.map(({ item, origIdx }) => `
+      <div class="tl-item ${progressColor(item.progress)}" ${dragHandlers('world_timeline', origIdx)} ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}')" style="cursor:pointer"` : ``}>
+        ${dragHandleHtml('world_timeline', origIdx)}
         <div class="tl-marker ${progressColor(item.progress)}"></div>
         <div class="tl-year">${item.year}</div>
         <div class="tl-title">${item.title}</div>
@@ -362,13 +371,13 @@
         ${item.progress !== undefined ? `<div class="tl-progress-bar"><div class="tl-progress-fill ${progressColor(item.progress)}" style="width:${item.progress}%"></div></div><span class="tl-progress-label">${item.progress}%</span>` : ''}
       </div>`).join('');
 
-    // Story Timeline section
+    // Story Timeline
     const storyEditBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addStoryTimeline()">+ 新增故事階段</button></div>` : '';
     const tagLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
-    const filteredStl = (stl||[]).filter(matches);
     html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">故事時間線</h4>` +
-      storyEditBtn + filteredStl.map((item, i) => `
-      <div class="tl-item ${progressColor(item.progress)}" ${state.isEditMode ? `onclick="app.openEdit('story_timeline','${item.name}' )" style="cursor:pointer"` : ``}>
+      storyEditBtn + filteredStl.map(({ item, origIdx }) => `
+      <div class="tl-item ${progressColor(item.progress)}" ${dragHandlers('story_timeline', origIdx)} ${state.isEditMode ? `onclick="app.openEdit('story_timeline','${item.name}')" style="cursor:pointer"` : ``}>
+        ${dragHandleHtml('story_timeline', origIdx)}
         <div class="tl-marker ${progressColor(item.progress)}"></div>
         <div class="tl-year">${item.days}</div>
         <div class="tl-title">${item.name}</div>
@@ -377,18 +386,15 @@
         <span class="tl-route-tag tl-tag-${item.tag}" style="display:inline-block;padding:2px 8px;border-radius:99px;font-size:0.65rem;margin-top:4px">${tagLabels[item.tag]||item.tag}路線</span>
       </div>`).join('');
 
-    // Ending branches section
+    // Endings (grid — no drag, no edit onclick)
     const routeLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
     const routeColors = { common: 'cyan', xavier: 'gold', lycaon: 'magenta', secret: 'cyan' };
     const routeIcon = (r) => r === 'xavier' ? '⚖' : r === 'lycaon' ? '🐺' : r === 'secret' ? '🌀' : '📖';
-
     const endingAddBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-outline" onclick="app.addEnding()">+ 新增結局</button></div>` : '';
-
     const filteredEndings = endings.filter(matches);
-
     html += endingAddBtn + `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">結局分支（共 ${filteredEndings.length} 條）</h4>
       <div class="endings-grid">` + filteredEndings.map((e) => `
-        <div class="ending-card ending-${routeColors[e.route]} ${progressColor(e.progress)}" ${state.isEditMode ? `onclick="app.openEdit('endings','${e.id}' )" style="cursor:pointer"` : ``}>
+        <div class="ending-card ending-${routeColors[e.route]} ${progressColor(e.progress)}" ${state.isEditMode ? `onclick="app.openEdit('endings','${e.id}')" style="cursor:pointer"` : ``}>
           <div class="ending-header">
             <span class="ending-route-icon">${routeIcon(e.route)}</span>
             <span class="ending-route-tag tag-${routeColors[e.route]}">${routeLabels[e.route]||e.route}</span>
@@ -406,8 +412,16 @@
   function renderSystems() {
     const sys = GameData.meta.systems;
     const addBtn = state.isEditMode ? `<div class="sys-add-btn"><button class="btn-sm btn-outline" onclick="app.addSystem()">+ 新增系統</button></div>` : '';
-    const sysRow = s => `
-      <div class="sys-row">
+    const sysRow = (s, idx) => {
+      const dragHandle = state.isEditMode
+        ? `<span class="drag-handle" draggable="true" ondragstart="app.reorderDragStart(event,'systems',${idx})" ondragend="app.reorderDragEnd(event)" title="拖曳調整順序" style="margin-right:8px;align-self:flex-start;padding-top:2px;flex-shrink:0">☰</span>`
+        : '';
+      const dragHandlers = state.isEditMode
+        ? `ondragover="app.reorderDragOver(event)" ondragleave="app.reorderDragLeave(event)" ondrop="app.reorderDrop(event,${idx})"`
+        : '';
+      return `
+      <div class="sys-row" ${dragHandlers}>
+        ${dragHandle}
         <div class="sys-icon">${s.icon}</div>
         <div class="sys-main">
           <div class="sys-meta">
@@ -421,25 +435,37 @@
           <button class="btn-sm" onclick="app.openEdit('systems','${s.id}')">✎ 編輯</button>
         </div>` : ''}
       </div>`;
-    document.getElementById('systems-grid').innerHTML = addBtn + sys.map(sysRow).join('');
+    };
+    document.getElementById('systems-grid').innerHTML = addBtn + sys.map((s, i) => sysRow(s, i)).join('');
   }
 
   // ── RENDER: Notes ──
   function renderNotes() {
     const notes = GameData.notes;
-        const noteCard = n => `
-      <div class="note-card">
-        <div class="note-title">${n.title}</div>
-        <div class="note-content">${n.content}</div>
-        <div class="note-footer">
-          ${n.tags.map(t => `<span class="note-tag">${t}</span>`).join('')}
-          <span class="note-date">${n.updated}</span>
-          ${state.isEditMode ? `<div class="card-edit-bar">
-            <button class="btn-sm" onclick="app.openEdit('notes','${n.id}')">✎ 編輯</button>
-          </div>` : ''}
+    const noteCard = (n, idx) => {
+      const dragHandle = state.isEditMode
+        ? `<span class="drag-handle" draggable="true" ondragstart="app.reorderDragStart(event,'notes',${idx})" ondragend="app.reorderDragEnd(event)" title="拖曳調整順序" style="margin-right:8px;align-self:flex-start;padding-top:2px;flex-shrink:0">☰</span>`
+        : '';
+      const dragHandlers = state.isEditMode
+        ? `ondragover="app.reorderDragOver(event)" ondragleave="app.reorderDragLeave(event)" ondrop="app.reorderDrop(event,${idx})"`
+        : '';
+      return `
+      <div class="note-card" ${dragHandlers}>
+        ${dragHandle}
+        <div style="flex:1;min-width:0">
+          <div class="note-title">${n.title}</div>
+          <div class="note-content">${n.content}</div>
+          <div class="note-footer">
+            ${n.tags.map(t => `<span class="note-tag">${t}</span>`).join('')}
+            <span class="note-date">${n.updated}</span>
+            ${state.isEditMode ? `<div class="card-edit-bar">
+              <button class="btn-sm" onclick="app.openEdit('notes','${n.id}')">✎ 編輯</button>
+            </div>` : ''}
+          </div>
         </div>
       </div>`;
-    document.getElementById('notes-list').innerHTML = notes.map(noteCard).join('') + (state.isEditMode ? `<div class="note-card" style="border-style:dashed;opacity:0.5" onclick="app.newNote()"><div class="note-title">+ 新增筆記</div></div>` : '');
+    };
+    document.getElementById('notes-list').innerHTML = notes.map((n, i) => noteCard(n, i)).join('') + (state.isEditMode ? `<div class="note-card" style="border-style:dashed;opacity:0.5" onclick="app.newNote()"><div class="note-title">+ 新增筆記</div></div>` : '');
   }
 
   // ── Drag & Drop Reorder (edit mode) ──
@@ -491,6 +517,77 @@
     document.querySelectorAll('.char-page-card.char-drag-over').forEach(el => el.classList.remove('char-drag-over'));
     document.querySelectorAll('.char-page-card[style*="opacity"]').forEach(el => el.style.opacity = '');
     _charDragSrc = null;
+  }
+
+  // ── GENERIC LIST DRAG & DROP (systems / world_timeline / story_timeline / notes) ──
+  // Works with filtered lists: idx refers to the item's ORIGINAL position in GameData array
+  let _reorderSection = null;
+  let _reorderSrcIdx = null;
+
+  function reorderGetArr(section) {
+    const map = {
+      systems:        () => GameData.meta.systems,
+      world_timeline: () => GameData.meta.world_timeline,
+      story_timeline: () => GameData.meta.story_timeline,
+      notes:          () => GameData.notes,
+    };
+    return map[section] ? map[section]() : null;
+  }
+
+  function reorderRender(section) {
+    if (section === 'world_timeline' || section === 'story_timeline') renderWorld();
+    else if (section === 'systems') renderSystems();
+    else if (section === 'notes') renderNotes();
+  }
+
+  function reorderDragStart(e, section, idx) {
+    if (!state.isEditMode) return;
+    _reorderSection = section;
+    _reorderSrcIdx = idx;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', idx);
+  }
+
+  function reorderDragOver(e) {
+    if (!state.isEditMode || _reorderSection === null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const el = e.target.closest ? e.target.closest('.sys-row, .tl-item, .note-card') : e.target;
+    if (el) el.classList.add('drag-target');
+  }
+
+  function reorderDragLeave(e) {
+    const el = e.target.closest ? e.target.closest('.sys-row, .tl-item, .note-card') : e.target;
+    if (el) el.classList.remove('drag-target');
+  }
+
+  function reorderDrop(e, targetIdx) {
+    if (!state.isEditMode || _reorderSection === null || _reorderSrcIdx === null || _reorderSrcIdx === targetIdx) return;
+    e.preventDefault();
+    const el = e.target.closest ? e.target.closest('.sys-row, .tl-item, .note-card') : e.target;
+    if (el) el.classList.remove('drag-target');
+    const arr = reorderGetArr(_reorderSection);
+    if (!arr) return;
+    const [moved] = arr.splice(_reorderSrcIdx, 1);
+    arr.splice(targetIdx, 0, moved);
+    // Persist
+    if (_reorderSection === 'systems') {
+      GameData.meta = { ...GameData.meta, systems: [...arr] };
+    } else if (_reorderSection === 'world_timeline') {
+      GameData.meta = { ...GameData.meta, world_timeline: [...arr] };
+    } else if (_reorderSection === 'story_timeline') {
+      GameData.meta = { ...GameData.meta, story_timeline: [...arr] };
+    }
+    markDirty();
+    saveToLocalStorage();
+    reorderRender(_reorderSection);
+    toast('順序已調整', 'success');
+  }
+
+  function reorderDragEnd(e) {
+    document.querySelectorAll('.drag-target').forEach(el => el.classList.remove('drag-target'));
+    _reorderSection = null;
+    _reorderSrcIdx = null;
   }
 
   function dragStart(e, idx) {
@@ -1781,6 +1878,7 @@ window.app = {
     // Drag & drop
     dragStart, dragOver, dragLeave, drop, dragEnd,
     charDragStart, charDragOver, charDragLeave, charDrop, charDragEnd,
+    reorderDragStart, reorderDragOver, reorderDragLeave, reorderDrop, reorderDragEnd,
   };
 
   document.addEventListener('DOMContentLoaded', init);
