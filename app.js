@@ -264,8 +264,12 @@
       const editBtn = state.isEditMode
         ? `<button class="bk-edit-btn" onclick="app.openEdit('${state.backlogTab}','${itemId}')">✎ 編輯</button>`
         : '';
-      const dragHandle = '';
-      const dragHandlers = '';
+      const dragHandle = state.isEditMode
+        ? `<span class="drag-handle" draggable="true" ondragstart="app.dragStart(event,${idx})" ondragend="app.dragEnd(event,this)" title="拖曳移動">☰</span>`
+        : '';
+      const dragHandlers = state.isEditMode
+        ? `ondragover="app.dragOver(event)" ondragleave="app.dragLeave(event)" ondrop="app.drop(event,${idx})"`
+        : '';
       return `
         <div class="backlog-item" data-drag-idx="${idx}" ${dragHandlers}>
           ${dragHandle}
@@ -293,19 +297,9 @@
     const chars = GameData.meta.characters;
     const el = document.getElementById('chars-layout');
     const editHeader = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addCharacter()">+ 新增角色</button></div>` : '';
-    el.innerHTML = editHeader + chars.map((c, idx) => {
-      const dragHandle = state.isEditMode
-        ? `<span class="drag-handle" draggable="true" ondragstart="app.charDragStart(event,${idx})" ondragend="app.charDragEnd(event,this)" title="拖曳移動">☰</span>`
-        : '';
-      const dragAttrs = state.isEditMode
-        ? `ondragover="app.charDragOver(event)" ondragleave="app.charDragLeave(event)" ondrop="app.charDrop(event,${idx})"`
-        : '';
-      const editBar = state.isEditMode
-        ? `<div class="card-edit-bar" style="margin-left:16px;flex-shrink:0"><button class="btn-sm" onclick="app.openEdit('characters','${c.id}')">✎ 編輯</button></div>`
-        : '';
-      return `<div class="char-page-card" data-char-idx="${idx}" ${dragAttrs}>
-        ${dragHandle}
-        <div class="char-page-header" style="flex:1;min-width:0">
+    el.innerHTML = editHeader + chars.map(c => `
+      <div class="char-page-card">
+        <div class="char-page-header">
           <div class="char-avatar ${c.id}">${c.icon || (c.id === 'xavier' ? '⚖️' : c.id === 'lycaon' ? '🐺' : '👤')}</div>
           <div>
             <div>
@@ -314,14 +308,13 @@
             </div>
             <div class="char-page-role">${c.role}</div>
           </div>
+          ${state.isEditMode ? `<button class="btn-sm btn-outline" style="margin-left:auto" onclick="app.openEdit('characters','${c.id}')">編輯</button>` : ''}
         </div>
         <div class="char-page-body">
           <p class="char-page-desc">${c.description}</p>
           <div class="char-tags">${c.tags.map(t => `<span class="char-tag">${t}</span>`).join('')}</div>
         </div>
-        ${editBar}
-      </div>`;
-    }).join('');
+      </div>`).join('');
   }
 
 // ── RENDER: World ──
@@ -398,27 +391,23 @@
   // ── RENDER: Systems ──
   function renderSystems() {
     const sys = GameData.meta.systems;
-    const addBtn = state.isEditMode
-      ? `<div style="margin-bottom:16px"><button class="btn-sm btn-outline" onclick="app.addSystem()">+ 新增系統</button></div>`
-      : '';
-    const sysRow = s => `
-      <div class="note-card sys-row">
-        <div class="sys-row-header">
-          <span class="sys-icon" style="font-size:1.2rem;flex-shrink:0">${s.icon}</span>
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-              <span class="sys-name" style="font-size:0.85rem">${s.name}</span>
-              <span style="font-family:var(--font-mono);font-size:1.8rem;font-weight:900;color:rgba(51,255,51,0.06)">${s.num}</span>
-            </div>
-            <p class="sys-desc" style="font-size:0.75rem;color:var(--dos-gray);line-height:1.6;margin:0 0 8px">${s.desc}</p>
-            <div class="sys-tags">${s.tags.map(t => `<span class="sys-tag">${t}</span>`).join('')}</div>
+    const addBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addSystem()">+ 新增系統</button></div>` : '';
+    const sysCard = s => `
+      <div class="sys-card">
+        <div class="sys-card-header">
+          <span class="sys-icon">${s.icon}</span>
+          <span class="sys-num">${s.num}</span>
+          <div>
+            <div class="sys-name">${s.name}</div>
           </div>
-          ${state.isEditMode ? `<div class="card-edit-bar" style="margin-left:16px;flex-shrink:0">
-            <button class="btn-sm" onclick="app.openEdit('systems','${s.id}')">✎ 編輯</button>
-          </div>` : ''}
         </div>
+        <p class="sys-desc">${s.desc}</p>
+        <div class="sys-tags">${s.tags.map(t => `<span class="sys-tag">${t}</span>`).join('')}</div>
+        ${state.isEditMode ? `<div class="card-edit-bar">
+          <button class="btn-sm" onclick="app.openEdit('systems','${s.id}')">✎ 編輯</button>
+        </div>` : ''}
       </div>`;
-    document.getElementById('systems-grid').innerHTML = addBtn + sys.map(sysRow).join('');
+    document.getElementById('systems-grid').innerHTML = addBtn + sys.map(sysCard).join('');
   }
 
   // ── RENDER: Notes ──
@@ -500,50 +489,6 @@
     document.querySelectorAll('.backlog-item[style*="opacity"]').forEach(el => el.style.opacity = '');
     _dragSrcIdx = null;
     _dragTab = null;
-  }
-
-  // ── Character Drag & Drop (edit mode) ──
-  let _charDragSrcIdx = null;
-
-  function charDragStart(e, idx) {
-    if (!state.isEditMode) return;
-    _charDragSrcIdx = idx;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', idx);
-    const card = e.target.closest ? e.target.closest('.char-page-card') : e.target;
-    if (card) card.style.opacity = '0.4';
-  }
-
-  function charDragOver(e) {
-    if (!state.isEditMode) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    const card = e.target.closest ? e.target.closest('.char-page-card') : e.target;
-    if (card) card.classList.add('drag-over');
-  }
-
-  function charDragLeave(e) {
-    const card = e.target.closest ? e.target.closest('.char-page-card') : e.target;
-    if (card) card.classList.remove('drag-over');
-  }
-
-  function charDrop(e, targetIdx) {
-    if (!state.isEditMode || _charDragSrcIdx === null || _charDragSrcIdx === targetIdx) return;
-    e.preventDefault();
-    const card = e.target.closest ? e.target.closest('.char-page-card') : e.target;
-    if (card) card.classList.remove('drag-over');
-    const chars = GameData.meta.characters;
-    const [moved] = chars.splice(_charDragSrcIdx, 1);
-    chars.splice(targetIdx, 0, moved);
-    markDirty();
-    renderCharacters();
-    toast('已移動角色', 'info');
-  }
-
-  function charDragEnd(e) {
-    document.querySelectorAll('.char-page-card.drag-over').forEach(el => el.classList.remove('drag-over'));
-    document.querySelectorAll('.char-page-card[style*="opacity"]').forEach(el => el.style.opacity = '');
-    _charDragSrcIdx = null;
   }
 
   // ── EDIT MODE ──
@@ -1775,8 +1720,6 @@ window.app = {
     restoreFromHistory, resetToDataJs,
     // Drag & drop
     dragStart, dragOver, dragLeave, drop, dragEnd,
-    // Character drag & drop
-    charDragStart, charDragOver, charDragLeave, charDrop, charDragEnd,
   };
 
   document.addEventListener('DOMContentLoaded', init);
