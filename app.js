@@ -248,7 +248,7 @@
       container.innerHTML = `<div style="padding:40px;text-align:center;color:var(--dos-gray);font-family:var(--font-mono)">暫無資料${state.backlogFilter ? '（無符合搜尋結果）' : ''}</div>`;
       return;
     }
-    container.innerHTML = items.map(item => {
+    container.innerHTML = items.map((item, idx) => {
       const id = item.orderID || item.id || item.subject || item._file || '';
       const name = item.clientName || item.subject || item.itemName || item.headline || item.title || '(未命名)';
       const meta = [
@@ -260,8 +260,11 @@
       const type = item._type ? item._type.split('.').pop() : '';
       const _keyFor = { orders:'_file', events:'_file', items:'_file', news:'_file', emails:'id', characters:'id', notes:'id' };
       const _k = _keyFor[state.backlogTab] || 'id';
+      const editAttrs = state.isEditMode
+        ? `onclick="app.openEdit('${state.backlogTab}','${item[_k] || item._file || item.id}')" draggable="true" ondragstart="app.dragStart(event,${idx})" ondragover="app.dragOver(event,this)" ondragleave="app.dragLeave(event,this)" ondrop="app.drop(event,${idx})" ondragend="app.dragEnd(event,this)" data-drag-idx="${idx}"`
+        : '';
       return `
-        <div class="backlog-item" ${state.isEditMode ? `onclick="app.openEdit('${state.backlogTab}','${item[_k] || item._file || item.id}')"` : ''}>
+        <div class="backlog-item" ${editAttrs}>
           <span class="bk-id">${state.showIds ? id : id.substring(0,12)}</span>
           <span class="bk-title">${name}</span>
           ${meta ? `<span class="bk-meta">${meta}</span>` : ''}
@@ -406,6 +409,64 @@
           <span class="note-date">${n.updated}</span>
         </div>
       </div>`).join('') + (state.isEditMode ? `<div class="note-card" style="border-style:dashed;opacity:0.5" onclick="app.newNote()"><div class="note-title">+ 新增筆記</div></div>` : '');
+  }
+
+  // ── Drag & Drop Reorder (edit mode) ──
+  let _dragSrcIdx = null;
+  let _dragTab = null;  // current backlog tab being dragged
+
+  function dragStart(e, idx) {
+    if (!state.isEditMode) return;
+    _dragSrcIdx = idx;
+    _dragTab = state.backlogTab;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', idx);
+    // Dim the dragged item slightly
+    e.target.style.opacity = '0.4';
+  }
+
+  function dragOver(e, el) {
+    if (!state.isEditMode) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    el.classList.add('drag-over');
+  }
+
+  function dragLeave(e, el) {
+    el.classList.remove('drag-over');
+  }
+
+  function drop(e, targetIdx) {
+    if (!state.isEditMode || _dragSrcIdx === null || _dragSrcIdx === targetIdx) return;
+    e.preventDefault();
+    const tab = state.backlogTab || _dragTab;
+    // Get the correct array
+    let arr;
+    if (tab === 'orders') arr = GameData.orders;
+    else if (tab === 'events') arr = GameData.events;
+    else if (tab === 'items') arr = GameData.items;
+    else if (tab === 'emails') arr = GameData.emails;
+    else if (tab === 'news') arr = GameData.news;
+    else return;
+    // Move item from src to target
+    const [moved] = arr.splice(_dragSrcIdx, 1);
+    arr.splice(targetIdx, 0, moved);
+    // Re-assign back to GameData
+    if (tab === 'orders') GameData.orders = arr;
+    else if (tab === 'events') GameData.events = arr;
+    else if (tab === 'items') GameData.items = arr;
+    else if (tab === 'emails') GameData.emails = arr;
+    else if (tab === 'news') GameData.news = arr;
+    markDirty();
+    renderBacklog();
+    toast('已移動項目', 'info');
+  }
+
+  function dragEnd(e, el) {
+    el.style.opacity = '';
+    el.classList.remove('drag-over');
+    _dragSrcIdx = null;
+    _dragTab = null;
   }
 
   // ── EDIT MODE ──
@@ -1623,7 +1684,7 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
   }
 
   // Expose API
-  window.app = {
+window.app = {
     switchView, renderCurrentView,
     toggleEdit, openEdit, editCancel, editSave, markDirty,
     showJsonEditor, showBlockEditor, addField, addRecord, deleteBlock,
@@ -1634,7 +1695,9 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     handleNewContentAction, performPull, getSnapshots, restoreFromSnapshot,
     saveAll, saveToLocalStorage,
     exportSheetJSON,
-    restoreFromHistory, resetToDataJs
+    restoreFromHistory, resetToDataJs,
+    // Drag & drop
+    dragStart, dragOver, dragLeave, drop, dragEnd,
   };
 
   document.addEventListener('DOMContentLoaded', init);

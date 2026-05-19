@@ -1167,3 +1167,16 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--dos-gree
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+
+/* ════ DRAG & DROP ════ */
+.backlog-item.drag-over {
+  border-top: 2px solid var(--dos-cyan, #00ffaa);
+  background: rgba(0, 255, 170, 0.05);
+}
+.backlog-item[draggable="true"] {
+  cursor: grab;
+}
+.backlog-item[draggable="true"]:active {
+  cursor: grabbing;
+}
