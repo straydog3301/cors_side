@@ -391,23 +391,23 @@
   // ── RENDER: Systems ──
   function renderSystems() {
     const sys = GameData.meta.systems;
-    const addBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addSystem()">+ 新增系統</button></div>` : '';
-    const sysCard = s => `
-      <div class="sys-card">
-        <div class="sys-card-header">
-          <span class="sys-icon">${s.icon}</span>
-          <span class="sys-num">${s.num}</span>
-          <div>
-            <div class="sys-name">${s.name}</div>
+    const addBtn = state.isEditMode ? `<div class="sys-add-btn"><button class="btn-sm btn-outline" onclick="app.addSystem()">+ 新增系統</button></div>` : '';
+    const sysRow = s => `
+      <div class="sys-row">
+        <div class="sys-icon">${s.icon}</div>
+        <div class="sys-main">
+          <div class="sys-meta">
+            <span class="sys-num">${s.num}</span>
+            <span class="sys-name">${s.name}</span>
           </div>
+          <div class="sys-desc">${s.desc}</div>
+          <div class="sys-tags">${s.tags.map(t => `<span class="sys-tag">${t}</span>`).join('')}</div>
         </div>
-        <p class="sys-desc">${s.desc}</p>
-        <div class="sys-tags">${s.tags.map(t => `<span class="sys-tag">${t}</span>`).join('')}</div>
         ${state.isEditMode ? `<div class="card-edit-bar">
           <button class="btn-sm" onclick="app.openEdit('systems','${s.id}')">✎ 編輯</button>
         </div>` : ''}
       </div>`;
-    document.getElementById('systems-grid').innerHTML = addBtn + sys.map(sysCard).join('');
+    document.getElementById('systems-grid').innerHTML = addBtn + sys.map(sysRow).join('');
   }
 
   // ── RENDER: Notes ──
