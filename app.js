@@ -12,6 +12,7 @@
     editDirty: false,
     editData: null,        // working copy of data being edited
     githubToken: localStorage.getItem('cors_gh_token') || '',
+    githubUser: null,        // GitHub username of the current user
     editPassword: localStorage.getItem('cors_edit_password') || '',
     autosave: localStorage.getItem('cors_autosave') !== 'false',
     showIds: localStorage.getItem('cors_show_ids') === 'true',
@@ -1266,6 +1267,7 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       const r = await fetch('https://api.github.com/user', { headers: API.headers(token) });
       if (!r.ok) throw new Error(r.status);
       const user = await r.json();
+      state.githubUser = user.login;  // Store for later filtering
       document.getElementById('connect-status').innerHTML = `<span style="color:var(--dos-success)">✓ 已連接：${user.login}</span>`;
       document.getElementById('user-avatar').textContent = user.login.substring(0,2).toUpperCase();
       document.getElementById('user-name').textContent = user.login;
@@ -1416,8 +1418,9 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       // Update pending snapshot with real SHA and update sync metadata
       const realSha = newCommit.sha.substring(0, 8);
       updateSnapshotSha(realSha);
-      setSyncMeta({ syncSha: newCommit.sha, editTs: null });
+      setSyncMeta({ syncSha: newCommit.sha, seenSha: newCommit.sha, editTs: null });
       state.lastSyncSha = newCommit.sha;
+      state.lastSeenSha = newCommit.sha;
       state.githubDirty = false;
       state.githubHasNewContent = false;
       renderNewContentBadge();
@@ -1734,22 +1737,32 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     if (!state.githubToken) return;
     const repo = document.getElementById('setting-repo')?.value || 'straydog3301/cors_side';
     try {
-      const r = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=1&sha=main`, {
+      // Fetch multiple commits to filter out self-pushes
+      const r = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=5&sha=main`, {
         headers: API.headers(state.githubToken)
       });
       if (!r.ok) return;
       const commits = await r.json();
       if (!commits || !commits.length) return;
-      const latestSha = commits[0].sha;
       const meta = getSyncMeta();
-      // Update lastSeenSha so we know what's on GitHub
+      // Update lastSeenSha to the absolute latest SHA (including our own pushes)
+      const latestSha = commits[0].sha;
       setSyncMeta({ seenSha: latestSha });
       state.lastSeenSha = latestSha;
-      // If we haven't seen this SHA before (or it's different from what we last noted) → new content
-      if (meta.seenSha !== latestSha) {
-        state.githubHasNewContent = true;
-        state.githubDirty = isDirty();
-        renderNewContentBadge();
+      // Filter out commits made by the current user
+      const selfLogin = state.githubUser || '';
+      const otherCommits = commits.filter(c => {
+        const author = c.author?.login || c.commit?.author?.name || '';
+        return author !== selfLogin;
+      });
+      // Only notify if there's a new commit from ANOTHER developer
+      if (otherCommits.length > 0) {
+        const latestOtherSha = otherCommits[0].sha;
+        if (meta.seenSha !== latestOtherSha) {
+          state.githubHasNewContent = true;
+          state.githubDirty = isDirty();
+          renderNewContentBadge();
+        }
       }
     } catch(e) { /* silent */ }
   }
@@ -1841,6 +1854,7 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
           .then(r => r.ok ? r.json() : null)
           .then(user => {
             if (user) {
+              state.githubUser = user.login;  // Store for filtering self-commits
               document.getElementById('user-avatar').textContent = user.login.substring(0,2).toUpperCase();
               document.getElementById('user-name').textContent = user.login;
               document.getElementById('user-status').textContent = 'GitHub 已連接';
