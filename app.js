@@ -1138,7 +1138,6 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       } catch(e) { /* skip */ }
     }
     if (loaded > 0) {
-      saveToLocalStorage();
       renderCurrentView();
     }
     // Returns whether any files were loaded (for init() to know if rendering happened)
