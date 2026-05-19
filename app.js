@@ -1423,6 +1423,7 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       state.lastSeenSha = newCommit.sha;
       state.githubDirty = false;
       state.githubHasNewContent = false;
+      console.log('[DEBUG] pushToGithub: seenSha set to', newCommit.sha, '| localStorage:', localStorage.getItem('cors-last-seen-sha'));
       renderNewContentBadge();
 
       // Check GitHub Pages deployment status
@@ -1766,9 +1767,12 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       // actually pushes or pulls (pushToGithub / performPull handle that).
       // If seenSha differs from latestSha → new content is available.
       if (meta.seenSha !== latestSha) {
+        console.log('[DEBUG] checkGithubNewContent: showing bell | seenSha:', meta.seenSha, '| latestSha:', latestSha);
         state.githubHasNewContent = true;
         state.githubDirty = isDirty();
         renderNewContentBadge();
+      } else {
+        console.log('[DEBUG] checkGithubNewContent: bell hidden | seenSha:', meta.seenSha, '| latestSha:', latestSha);
       }
     } catch(e) { /* silent */ }
   }
