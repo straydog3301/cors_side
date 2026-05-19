@@ -191,7 +191,7 @@
       const chars = meta.characters || [];
       crEl.innerHTML = chars.map(c => `
         <div class="char-route-card" ${edit ? `onclick="app.openEdit('characters','${c.id}')" style="cursor:pointer"` : ''}>
-          <div class="char-route-avatar char-avatar-${c.id}">${c.id==='xavier'?'⚖':'🐺'}</div>
+          <div class="char-route-avatar char-avatar-${c.id}">${c.icon || (c.id==='xavier'?'⚖':c.id==='lycaon'?'🐺':'👤')}</div>
           <div class="char-route-info">
             <div class="char-route-name">${c.name_zh} · ${c.name_en}</div>
             <div class="char-route-role">${c.role}</div>
@@ -288,7 +288,7 @@
     el.innerHTML = editHeader + chars.map(c => `
       <div class="char-page-card">
         <div class="char-page-header">
-          <div class="char-avatar ${c.id}">${c.id === 'xavier' ? '⚖️' : '🦊'}</div>
+          <div class="char-avatar ${c.id}">${c.icon || (c.id === 'xavier' ? '⚖️' : c.id === 'lycaon' ? '🐺' : '👤')}</div>
           <div>
             <div>
               <span class="char-page-name-zh">${c.name_zh}</span>
@@ -379,7 +379,8 @@
   // ── RENDER: Systems ──
   function renderSystems() {
     const sys = GameData.meta.systems;
-    document.getElementById('systems-grid').innerHTML = sys.map(s => `
+    const addBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addSystem()">+ 新增系統</button></div>` : '';
+    document.getElementById('systems-grid').innerHTML = addBtn + sys.map(s => `
       <div class="sys-card" ${state.isEditMode ? `onclick="app.openEdit('systems','${s.id}')"` : ''}>
         <div class="sys-card-header">
           <span class="sys-icon">${s.icon}</span>
@@ -669,7 +670,7 @@
   function addCharacter() {
     if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
     const newId = 'char_' + Date.now();
-    const char = { id: newId, name_zh: '新角色', name_en: 'New Character', route: 'COMMON_ROUTE', role: '請填寫角色定位', description: '請填寫角色描述', tags: ['標籤1'] };
+    const char = { id: newId, name_zh: '新角色', name_en: 'New Character', route: 'COMMON_ROUTE', icon: '👤', role: '請填寫角色定位', description: '請填寫角色描述', tags: ['標籤1'] };
     GameData.meta = {...GameData.meta, characters: [...(GameData.meta.characters||[]), char]};
     markDirty();
     renderCharacters();
