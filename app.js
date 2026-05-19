@@ -1425,6 +1425,7 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       // Check GitHub Pages deployment status
       statusEl.innerHTML += `<br><span style="color:var(--dos-gray);font-size:0.7rem">⏳ 檢查 Pages 部署狀態...</span>`;
       checkPagesDeployment(repo).then(result => {
+        if (result.skipUpdate) return; // reload already triggered
         statusEl.innerHTML += `<br><span style="color:${result.color}">${result.icon} ${result.text}</span>`;
       });
     } catch(e) {
@@ -1451,7 +1452,7 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
   }
 
   // ── GitHub Pages deployment status ──
-  async function checkPagesDeployment(repo) {
+  async function checkPagesDeployment(repo, opts = {}) {
     try {
       const pagesResp = await fetch(`https://api.github.com/repos/${repo}/pages`, {
         headers: API.headers(state.githubToken)
@@ -1470,7 +1471,9 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
       if (!latestRun) return { icon: '✅', text: '推送成功！（等待 Actions 觸發）', color: 'var(--dos-success)' };
 
       if (latestRun.conclusion === 'success') {
-        return { icon: '✅', text: `Pages 部署成功（${latestRun.updated_at?.split('T')[0] || ''}）`, color: 'var(--dos-success)' };
+        statusEl.innerHTML += `<br><span style="color:var(--dos-success)">✅ Pages 部署成功（${latestRun.updated_at?.split('T')[0] || ''}）— 正在刷新頁面...</span>`;
+        setTimeout(() => location.reload(true), 1500);
+        return { skipUpdate: true };
       } else if (latestRun.conclusion === 'failure') {
         return { icon: '⚠️', text: `Pages 部署失敗 — 請檢查 Actions`, color: 'var(--dos-danger)' };
       } else {
