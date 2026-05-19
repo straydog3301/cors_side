@@ -697,9 +697,11 @@ input, textarea { font-family: var(--font-main); }
   width: 1px;
   background: var(--dos-border);
 }
-.tl-item { display: flex; align-items: flex-start; flex-wrap: wrap; position: relative; margin-bottom: 20px; }
+.tl-item { position: relative; margin-bottom: 20px; padding-left: 28px; }
 .tl-marker {
-  position: absolute; left: -21px; top: 4px;
+  position: absolute;
+  left: 0px;
+  top: 4px;
   width: 12px; height: 12px;
   border: 2px solid var(--dos-cyan);
   background: var(--dos-black);

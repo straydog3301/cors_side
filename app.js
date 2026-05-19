@@ -344,7 +344,7 @@
     };
 
     const dragHandleHtml = (section, origIdx) => state.isEditMode
-      ? `<span class="drag-handle" draggable="true" ondragstart="app.reorderDragStart(event,'${section}',${origIdx})" ondragend="app.reorderDragEnd(event)" title="拖曳調整順序" style="margin-right:6px;align-self:flex-start;padding-top:2px;flex-shrink:0">☰</span>`
+      ? `<span class="drag-handle" draggable="true" ondragstart="app.reorderDragStart(event,'${section}',${origIdx})" ondragend="app.reorderDragEnd(event)" title="拖曳調整順序" style="position:absolute;left:-28px;top:2px;z-index:10;color:var(--dos-dim);cursor:grab;font-size:0.7rem;line-height:1">☰</span>`
       : '';
     const dragHandlers = (section, origIdx) => state.isEditMode
       ? `ondragover="app.reorderDragOver(event)" ondragleave="app.reorderDragLeave(event)" ondrop="app.reorderDrop(event,${origIdx})"`
