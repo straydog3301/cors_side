@@ -1232,3 +1232,9 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--dos-gree
   border-color: var(--dos-cyan, #00ffaa);
   color: var(--dos-cyan, #00ffaa);
 }
+
+/* ── CHARACTER DRAG & DROP ── */
+.char-page-card.drag-over {
+  border-top: 2px solid var(--dos-cyan, #00ffaa);
+  background: rgba(0, 255, 170, 0.04);
+}

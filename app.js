@@ -297,24 +297,38 @@
     const chars = GameData.meta.characters;
     const el = document.getElementById('chars-layout');
     const editHeader = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-outline" onclick="app.addCharacter()">+ 新增角色</button></div>` : '';
-    el.innerHTML = editHeader + chars.map(c => `
-      <div class="char-page-card">
-        <div class="char-page-header">
-          <div class="char-avatar ${c.id}">${c.icon || (c.id === 'xavier' ? '⚖️' : c.id === 'lycaon' ? '🐺' : '👤')}</div>
-          <div>
+
+    const charCard = (c, idx) => {
+      const dragHandle = state.isEditMode
+        ? `<span class="drag-handle" draggable="true" ondragstart="app.charDragStart(event,${idx})" ondragend="app.charDragEnd(event)" title="拖曳調整順序" style="margin-right:8px;align-self:flex-start;padding-top:4px">☰</span>`
+        : '';
+      const dragHandlers = state.isEditMode
+        ? `ondragover="app.charDragOver(event)" ondragleave="app.charDragLeave(event)" ondrop="app.charDrop(event,${idx})"`
+        : '';
+      return `
+      <div class="char-page-card" ${dragHandlers}>
+        ${dragHandle}
+        <div style="flex:1;min-width:0">
+          <div class="char-page-header">
+            <div class="char-avatar ${c.id}">${c.icon || (c.id === 'xavier' ? '⚖️' : c.id === 'lycaon' ? '🐺' : '👤')}</div>
             <div>
-              <span class="char-page-name-zh">${c.name_zh}</span>
-              <span class="char-page-name-en ${c.id}">${c.name_en} / ${c.route}</span>
+              <div>
+                <span class="char-page-name-zh">${c.name_zh}</span>
+                <span class="char-page-name-en ${c.id}">${c.name_en} / ${c.route}</span>
+              </div>
+              <div class="char-page-role">${c.role}</div>
             </div>
-            <div class="char-page-role">${c.role}</div>
+            ${state.isEditMode ? `<button class="btn-sm btn-outline" style="margin-left:auto" onclick="app.openEdit('characters','${c.id}')">編輯</button>` : ''}
           </div>
-          ${state.isEditMode ? `<button class="btn-sm btn-outline" style="margin-left:auto" onclick="app.openEdit('characters','${c.id}')">編輯</button>` : ''}
+          <div class="char-page-body">
+            <p class="char-page-desc">${c.description}</p>
+            <div class="char-tags">${c.tags.map(t => `<span class="char-tag">${t}</span>`).join('')}</div>
+          </div>
         </div>
-        <div class="char-page-body">
-          <p class="char-page-desc">${c.description}</p>
-          <div class="char-tags">${c.tags.map(t => `<span class="char-tag">${t}</span>`).join('')}</div>
-        </div>
-      </div>`).join('');
+      </div>`;
+    };
+
+    el.innerHTML = editHeader + chars.map((c, i) => charCard(c, i)).join('');
   }
 
 // ── RENDER: World ──
@@ -431,6 +445,53 @@
   // ── Drag & Drop Reorder (edit mode) ──
   let _dragSrcIdx = null;
   let _dragTab = null;  // current backlog tab being dragged
+
+  // ── CHARACTER DRAG & DROP ──
+  let _charDragSrc = null;
+
+  function charDragStart(e, idx) {
+    if (!state.isEditMode) return;
+    _charDragSrc = idx;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', idx);
+    const card = e.target.closest('.char-page-card');
+    if (card) card.style.opacity = '0.4';
+  }
+
+  function charDragOver(e) {
+    if (!state.isEditMode || _charDragSrc === null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const card = e.target.closest ? e.target.closest('.char-page-card') : e.target;
+    if (card) card.classList.add('char-drag-over');
+  }
+
+  function charDragLeave(e) {
+    const card = e.target.closest ? e.target.closest('.char-page-card') : e.target;
+    if (card) card.classList.remove('char-drag-over');
+  }
+
+  function charDrop(e, targetIdx) {
+    if (!state.isEditMode || _charDragSrc === null || _charDragSrc === targetIdx) return;
+    e.preventDefault();
+    const card = e.target.closest ? e.target.closest('.char-page-card') : e.target;
+    if (card) card.classList.remove('char-drag-over');
+    const chars = GameData.meta.characters;
+    const [moved] = chars.splice(_charDragSrc, 1);
+    chars.splice(targetIdx, 0, moved);
+    // Immutable update to trigger reactivity
+    GameData.meta = { ...GameData.meta, characters: [...chars] };
+    markDirty();
+    saveToLocalStorage();
+    renderCharacters();
+    toast('角色順序已調整', 'success');
+  }
+
+  function charDragEnd(e) {
+    document.querySelectorAll('.char-page-card.char-drag-over').forEach(el => el.classList.remove('char-drag-over'));
+    document.querySelectorAll('.char-page-card[style*="opacity"]').forEach(el => el.style.opacity = '');
+    _charDragSrc = null;
+  }
 
   function dragStart(e, idx) {
     if (!state.isEditMode) return;
@@ -1720,6 +1781,7 @@ window.app = {
     restoreFromHistory, resetToDataJs,
     // Drag & drop
     dragStart, dragOver, dragLeave, drop, dragEnd,
+    charDragStart, charDragOver, charDragLeave, charDrop, charDragEnd,
   };
 
   document.addEventListener('DOMContentLoaded', init);
