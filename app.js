@@ -985,7 +985,7 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     let loaded = 0;
     for (const name of files) {
       try {
-        const r = await fetch(`${base}${name}.json`);
+        const r = await fetch(`${base}${name}.json`, { headers: { 'Cache-Control': 'no-cache' } });
         if (!r.ok) continue;
         const data = await r.json();
         GameData[name === 'meta' ? 'meta' : name] = data;
@@ -1349,7 +1349,9 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     let loaded = 0;
     for (const name of files) {
       try {
-        const file = await fetch(`https://api.github.com/repos/${repo}/contents/content/${name}.json`, { headers: API.headers(state.githubToken) });
+        const file = await fetch(`https://api.github.com/repos/${repo}/contents/content/${name}.json`, {
+          headers: { ...API.headers(state.githubToken), 'Cache-Control': 'no-cache' }
+        });
         if (!file.ok) continue;
         const json = await file.json();
         const content = base64Utf8Decode(json.content);
@@ -1525,7 +1527,9 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     let loaded = 0;
     for (const name of files) {
       try {
-        const file = await fetch(`https://api.github.com/repos/${repo}/contents/content/${name}.json`, { headers: API.headers(state.githubToken) });
+        const file = await fetch(`https://api.github.com/repos/${repo}/contents/content/${name}.json`, {
+          headers: { ...API.headers(state.githubToken), 'Cache-Control': 'no-cache' }
+        });
         if (!file.ok) continue;
         const json = await file.json();
         const content = base64Utf8Decode(json.content);
