@@ -184,6 +184,7 @@ const GameData = (function() {
   "characters": [
     {
       "id": "xavier",
+      "icon": "⚖️",
       "name_zh": "澤維爾",
       "name_en": "Xavier",
       "route": "XAVIER_ROUTE",
@@ -201,6 +202,7 @@ const GameData = (function() {
     },
     {
       "id": "lycaon",
+      "icon": "🐺",
       "name_zh": "萊卡翁",
       "name_en": "Lycaon",
       "route": "LYCAON_ROUTE",
