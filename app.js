@@ -1223,12 +1223,15 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
   async function loadFromPagesContent() {
     // Fetch 7 content JSON files from GitHub Pages static serve
     // This is the PRIMARY data source for all users (no token required)
+    // Add cache-busting query string so users always get latest content after deploy
     const files = ['orders','events','items','emails','news','notes','meta'];
     const base = '/cors_side/content/';  // relative to GitHub Pages root
+    const ts = Date.now();
     let loaded = 0;
     for (const name of files) {
       try {
-        const r = await fetch(`${base}${name}.json`, { headers: { 'Cache-Control': 'no-cache' } });
+        // ?v=timestamp forces GitHub Pages / CDN to bypass cache on every page load
+        const r = await fetch(`${base}${name}.json?v=${ts}`, { headers: { 'Cache-Control': 'no-cache' } });
         if (!r.ok) continue;
         const data = await r.json();
         GameData[name === 'meta' ? 'meta' : name] = data;
