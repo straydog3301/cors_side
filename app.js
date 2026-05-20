@@ -1220,17 +1220,16 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
   }
 
   // ── Load content from GitHub Pages (no token needed) ──
-  async function loadFromPagesContent() {
+async function loadFromPagesContent() {
     // Fetch 7 content JSON files from GitHub Pages static serve
     // This is the PRIMARY data source for all users (no token required)
-    // Add cache-busting query string so users always get latest content after deploy
+    // Use cache-busting query param to bypass GitHub Pages CDN/browser cache
     const files = ['orders','events','items','emails','news','notes','meta'];
-    const base = '/cors_side/content/';  // relative to GitHub Pages root
-    const ts = Date.now();
+    const base = '/cors_side/content/';
+    const ts = Date.now(); // unique per page load
     let loaded = 0;
     for (const name of files) {
       try {
-        // ?v=timestamp forces GitHub Pages / CDN to bypass cache on every page load
         const r = await fetch(`${base}${name}.json?v=${ts}`, { headers: { 'Cache-Control': 'no-cache' } });
         if (!r.ok) continue;
         const data = await r.json();
@@ -1597,10 +1596,11 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     // Same as loadFromGithub but without toast/status — used for auto-pull on init
     const repo = document.getElementById('setting-repo')?.value || 'straydog3301/cors_side';
     const files = ['orders','events','items','emails','news','notes','meta'];
+    const ts = Date.now();
     let loaded = 0;
     for (const name of files) {
       try {
-        const file = await fetch(`https://api.github.com/repos/${repo}/contents/content/${name}.json`, {
+        const file = await fetch(`https://api.github.com/repos/${repo}/contents/content/${name}.json?t=${ts}`, {
           headers: { ...API.headers(state.githubToken), 'Cache-Control': 'no-cache' }
         });
         if (!file.ok) continue;
@@ -1811,6 +1811,8 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
     if (loaded > 0) {
       saveToLocalStorage();
       renderCurrentView();
+    } else {
+      toast('⚠ 無法拉取資料，請確認 Token 有 content read 權限', 'error');
     }
     // Clear dirty flag and update sync state
     // Fetch the latest commit SHA so seenSha is accurate for next reload
