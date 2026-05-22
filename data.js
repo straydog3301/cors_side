@@ -322,6 +322,6 @@ const GameData = (function() {
     set notes(v) { _overrides.notes = v; },
     set meta(v) { _overrides.meta = v; },
     reset() { Object.keys(_overrides).forEach(k => delete _overrides[k]); },
-    exportAll() { return {orders:this.orders,events:this.events,items:this.items,emails:this.emails,news:this.news,notes:this.notes,meta:this.meta,notes:this.notes}; }
+    exportAll() { return {orders:this.orders,events:this.events,items:this.items,emails:this.emails,news:this.news,notes:this.notes,meta:this.meta}; }
   };
 })();

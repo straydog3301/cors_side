@@ -1177,14 +1177,13 @@ expandAttr = ' onclick="app.toggleNoteExpanded(\'' + n.id + '\')" style="cursor:
 
   function newNote() {
     if (!state.isEditMode) { toast('請先進入編輯模式', 'info'); return; }
-    const title = prompt('筆記標題：');
-    if (!title) return;
     const id = 'n' + Date.now();
-    const note = { id, title, content: '', tags: [], updated: new Date().toISOString().split('T')[0] };
+    const note = { id, title: '新筆記', content: '', tags: [], updated: new Date().toISOString().split('T')[0] };
     GameData.notes = [...GameData.notes, note];
     renderNotes();
     openEdit('notes', id);
     markDirty();
+    toast('已新增筆記，請填寫詳細資料', 'success');
   }
 
   // ── SETTINGS ──
