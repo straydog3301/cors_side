@@ -893,8 +893,8 @@ const expandClickAttr = isExpandable ? ' data-note-id="' + n.id + '" style="curs
   function markDirty() {
     state.editDirty = true;
     document.getElementById('edit-dirty').style.display = '';
-    // Track local edit timestamp so we know if user has unsynced changes
-    localStorage.setItem('cors-edit-ts', String(Date.now()));
+    // Auto-save to localStorage on every change so edits survive tab close
+    saveToLocalStorage();
     state.githubDirty = true;
   }
 
@@ -1014,9 +1014,9 @@ const expandClickAttr = isExpandable ? ' data-note-id="' + n.id + '" style="curs
     state.editDirty = false;
     document.getElementById('edit-dirty').style.display = 'none';
     document.getElementById('edit-overlay').classList.add('hidden');
-    toast('已儲存（本地）', 'success');
-
     saveToLocalStorage();
+    toast('已儲存至本機', 'success');
+
     renderCurrentView();
   }
 
@@ -1837,12 +1837,13 @@ function toggleShowIds(v) { state.showIds = v; localStorage.setItem('cors_show_i
   function updateReadOnlyUI() {
     const hasToken = !!state.githubToken;
     const editBtn = document.getElementById('btn-edit-toggle');
-    const saveBtn = document.getElementById('btn-save-top');
     const contentPanel = document.getElementById('settings-content-files');
     const devPanel = document.getElementById('settings-dev-mode');
     const restorePanel = document.getElementById('settings-restore');
     if (editBtn) editBtn.style.display = hasToken ? '' : 'none';
-    if (saveBtn) saveBtn.style.display = hasToken ? '' : 'none';
+    // 💾 save button removed — auto-save on every change via markDirty()
+    const saveBtn = document.getElementById('btn-save-top');
+    if (saveBtn) saveBtn.style.display = 'none';
     if (contentPanel) contentPanel.style.display = hasToken ? '' : 'none';
     if (devPanel) devPanel.style.display = hasToken ? '' : 'none';
     if (restorePanel) restorePanel.style.display = hasToken ? '' : 'none';
