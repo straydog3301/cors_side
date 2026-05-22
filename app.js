@@ -106,6 +106,18 @@
     return 'none';
   }
 
+  // Compute opacity from progress: 70% (0%) → 100% (100%)
+  function opacityStyle(pct) {
+    if (pct === undefined || pct === null) return '';
+    var o = 0.7 + (pct / 100) * 0.3;
+    return 'opacity:' + o.toFixed(2);
+  }
+
+  // Convert newlines to <br> for display, preserving whitespace
+  function nl2br(text) {
+    return (text || '').replace(/\n/g, '<br>');
+  }
+
   // ── RENDER: Dashboard ──
   function renderDashboard() {
     const meta = GameData.meta;
@@ -210,7 +222,7 @@
         <div class="world-card" ${edit ? `onclick="app.openEdit('world_timeline','${w.title.replace(/'/g,"\\'")}')" style="cursor:pointer"` : ''}>
           <div class="world-card-year">${w.year}</div>
           <div class="world-card-title">${w.title}</div>
-          <div class="world-card-desc">${w.desc}</div>
+          <div class="world-card-desc">${nl2br(w.desc)}</div>
           ${w.progress !== undefined ? `<div class="dash-tl-progress" style="margin-top:6px"><div class="dash-tl-progress-fill ${progressColor(w.progress)}" style="width:${w.progress}%"></div></div><span class="dash-tl-progress-label">${w.progress}%</span>` : ''}
         </div>`).join('');
     }
@@ -362,30 +374,36 @@
 
     // World Timeline
     html += `<h4 style="font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">世界觀時間線</h4>` +
-      editBtn + filteredTl.map(({ item, origIdx }) => `
-      <div class="tl-item ${progressColor(item.progress)}" ${dragHandlers('world_timeline', origIdx)} ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}')" style="cursor:pointer"` : ``}>
+      editBtn + filteredTl.map(({ item, origIdx }) => {
+      var ostyle = opacityStyle(item.progress);
+      var cursorStyle = state.isEditMode ? 'cursor:pointer;' : '';
+      return `
+      <div class="tl-item ${progressColor(item.progress)}" ${dragHandlers('world_timeline', origIdx)} style="${cursorStyle}${ostyle}" ${state.isEditMode ? `onclick="app.openEdit('world_timeline','${item.title}')"` : ``}>
         ${dragHandleHtml('world_timeline', origIdx)}
         <div class="tl-marker ${progressColor(item.progress)}"></div>
         <div class="tl-year">${item.year}</div>
         <div class="tl-title">${item.title}</div>
-        <div class="tl-desc">${item.desc}</div>
+        <div class="tl-desc">${nl2br(item.desc)}</div>
         ${item.progress !== undefined ? `<div class="tl-progress-bar"><div class="tl-progress-fill ${progressColor(item.progress)}" style="width:${item.progress}%"></div></div><span class="tl-progress-label">${item.progress}%</span>` : ''}
-      </div>`).join('');
+      </div>`}).join('');
 
     // Story Timeline
     const storyEditBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:12px"><button class="btn-sm btn-primary" onclick="app.addStoryTimeline()">+ 新增故事階段</button></div>` : '';
     const tagLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
     html += `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">故事時間線</h4>` +
-      storyEditBtn + filteredStl.map(({ item, origIdx }) => `
-      <div class="tl-item ${progressColor(item.progress)}" ${dragHandlers('story_timeline', origIdx)} ${state.isEditMode ? `onclick="app.openEdit('story_timeline','${item.name}')" style="cursor:pointer"` : ``}>
+      storyEditBtn + filteredStl.map(({ item, origIdx }) => {
+      var ostyle = opacityStyle(item.progress);
+      var cursorStyle = state.isEditMode ? 'cursor:pointer;' : '';
+      return `
+      <div class="tl-item ${progressColor(item.progress)}" ${dragHandlers('story_timeline', origIdx)} style="${cursorStyle}${ostyle}" ${state.isEditMode ? `onclick="app.openEdit('story_timeline','${item.name}')"` : ``}>
         ${dragHandleHtml('story_timeline', origIdx)}
         <div class="tl-marker ${progressColor(item.progress)}"></div>
         <div class="tl-year">${item.days}</div>
         <div class="tl-title">${item.name}</div>
-        <div class="tl-desc">${item.desc}</div>
+        <div class="tl-desc">${nl2br(item.desc)}</div>
         ${item.progress !== undefined ? `<div class="tl-progress-bar"><div class="tl-progress-fill ${progressColor(item.progress)}" style="width:${item.progress}%"></div></div><span class="tl-progress-label">${item.progress}%</span>` : ''}
         <span class="tl-route-tag tl-tag-${item.tag}" style="display:inline-block;padding:2px 8px;border-radius:99px;font-size:0.65rem;margin-top:4px">${tagLabels[item.tag]||item.tag}路線</span>
-      </div>`).join('');
+      </div>`}).join('');
 
     // Endings (grid — no drag, no edit onclick)
     const routeLabels = { common: '共通', xavier: '澤維爾', lycaon: '萊卡翁', secret: '隱藏' };
@@ -394,17 +412,19 @@
     const endingAddBtn = state.isEditMode ? `<div style="text-align:right;margin-bottom:8px"><button class="btn-sm btn-primary" onclick="app.addEnding()">+ 新增結局</button></div>` : '';
     const filteredEndings = endings.filter(matches);
     html += endingAddBtn + `<h4 style="margin-top:32px;font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">結局分支（共 ${filteredEndings.length} 條）</h4>
-      <div class="endings-grid">` + filteredEndings.map((e) => `
-        <div class="ending-card ending-${routeColors[e.route]} ${progressColor(e.progress)}" ${state.isEditMode ? `onclick="app.openEdit('endings','${e.id}')" style="cursor:pointer"` : ``}>
+      <div class="endings-grid">` + filteredEndings.map((e) => {
+      var ostyle = opacityStyle(e.progress);
+      return `
+        <div class="ending-card ending-${routeColors[e.route]} ${progressColor(e.progress)}" ${state.isEditMode ? `onclick="app.openEdit('endings','${e.id}')"` : ``} style="${ostyle}${state.isEditMode ? ';cursor:pointer' : ''}">
           <div class="ending-header">
             <span class="ending-route-icon">${routeIcon(e.route)}</span>
             <span class="ending-route-tag tag-${routeColors[e.route]}">${routeLabels[e.route]||e.route}</span>
           </div>
           <div class="ending-name">${e.name}</div>
-          <div class="ending-desc">${e.desc}</div>
+          <div class="ending-desc">${nl2br(e.desc)}</div>
           <div class="ending-progress-bar"><div class="ending-progress-fill ${progressColor(e.progress)}" style="width:${e.progress}%"></div></div>
           <div class="ending-progress-text">劇本完成度：${e.progress}%</div>
-        </div>`).join('') + `</div>`;
+        </div>`}).join('') + `</div>`;
 
     document.getElementById('world-timeline').innerHTML = html;
   }
@@ -429,7 +449,7 @@
             <span class="sys-num">${s.num}</span>
             <span class="sys-name">${s.name}</span>
           </div>
-          <div class="sys-desc">${s.desc}</div>
+          <div class="sys-desc">${nl2br(s.desc)}</div>
           <div class="sys-tags">${s.tags.map(t => `<span class="sys-tag">${t}</span>`).join('')}</div>
         </div>
         ${state.isEditMode ? `<div class="card-edit-bar">

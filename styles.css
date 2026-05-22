@@ -425,6 +425,7 @@ input, textarea { font-family: var(--font-main); }
 .phase-item:hover { border-color: var(--dos-border); }
 .phase-item.active { border-color: var(--dos-green); background: rgba(51,255,51,0.04); }
 .phase-item.done { opacity: 0.45; }
+/* Note: opacity handled by inline style per progress % for tl-item/ending-card now */
 .phase-status-dot {
   width: 8px; height: 8px; flex-shrink: 0; margin-top: 4px;
 }
@@ -711,8 +712,7 @@ input, textarea { font-family: var(--font-main); }
 .tl-title { font-size: 0.85rem; font-weight: 700; color: var(--dos-white); margin-bottom: 4px; }
 .tl-desc { font-size: 0.78rem; color: var(--dos-gray); line-height: 1.6; }
 
-/* Timeline progress colors */
-.tl-item.low, .tl-item.none { opacity: 0.45; }
+/* Timeline progress colors — opacity handled by inline style per progress % */
 .tl-marker.done { background: var(--dos-success); border-color: var(--dos-success); }
 .tl-marker.mid { background: var(--dos-amber); border-color: var(--dos-amber); }
 .tl-marker.low { background: var(--dos-cyan); border-color: var(--dos-cyan); }
@@ -738,7 +738,7 @@ input, textarea { font-family: var(--font-main); }
   transition: var(--transition);
 }
 .ending-card:hover { border-color: rgba(51,255,51,0.2); }
-.ending-card.low, .ending-card.none { opacity: 0.5; }
+/* opacity handled by inline style per progress % */
 .ending-card.ending-gold { border-left: 3px solid var(--dos-amber); }
 .ending-card.ending-magenta { border-left: 3px solid var(--dos-magenta); }
 .ending-card.ending-cyan { border-left: 3px solid var(--dos-cyan); }
