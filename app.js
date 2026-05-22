@@ -485,25 +485,70 @@
     return h;
   }
 
-  // ── RENDER: Notes (collapsible long notes) ──
+// ── Doc cache for fetched .md files ──
+  var _docCache = {};
+
+  // ── Fetch doc content by path ──
+  function getDocContent(docPath, callback) {
+    if (_docCache[docPath]) {
+      callback(_docCache[docPath]);
+      return;
+    }
+    fetch(docPath)
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(function(text) {
+        _docCache[docPath] = text;
+        callback(text);
+      })
+      .catch(function(err) {
+        callback('# ❌ 載入錯誤\n無法讀取文檔：' + err.message);
+      });
+  }
+
+  // ── RENDER: Notes (collapsible & docPath support) ──
   function renderNotes() {
     const notes = GameData.notes;
     const noteCard = (n, idx) => {
       const dragHandle = state.isEditMode
-        ? '<span class="drag-handle" draggable="true" ondragstart="app.reorderDragStart(event,\'notes\',' + idx + ')" ondragend="app.reorderDragEnd(event)" title="拖曳調整順序" style="margin-right:8px;align-self:flex-start;padding-top:2px;flex-shrink:0">☰</span>'
+? '<span class="drag-handle" draggable="true" ondragstart="app.reorderDragStart(event,\'notes\',' + idx + ')" ondragend="app.reorderDragEnd(event)" title="拖曳調整順序" style="margin-right:8px;align-self:flex-start;padding-top:2px;flex-shrink:0">☰</span>'
         : '';
       const dragHandlers = state.isEditMode
         ? 'ondragover="app.reorderDragOver(event)" ondragleave="app.reorderDragLeave(event)" ondrop="app.reorderDrop(event,' + idx + ')"'
         : '';
-      const isLong = n.content.length > 300;
+
+      const hasDocPath = !!n.docPath;
+      const hasContent = !!n.content;
+      const isLong = hasContent && n.content.length > 300;
       const noteId = 'note-body-' + n.id;
-      const expandAttr = isLong ? ' onclick="app.toggleNoteExpanded(\'' + n.id + '\')" style="cursor:pointer"' : '';
-      const expandIcon = isLong ? '<span class="note-expand-icon" id="note-icon-' + n.id + '">▸</span>' : '';
-      const preview = isLong ? stripMd(n.content).slice(0, 180) + '…' : n.content;
-      const expandedBody = isLong
-        ? '<div class="note-body" id="' + noteId + '" style="display:none">' + renderMd(n.content) + '</div>'
-        : '';
-      return '<div class="note-card' + (isLong ? ' note-card-expandable' : '') + '" ' + dragHandlers + '>'
+
+      // Determine expand logic
+      var expandAttr = '';
+      var expandIcon = '';
+      var preview = '';
+      var expandedBody = '';
+      var isExpandable = false;
+
+      if (hasDocPath) {
+        // Remote doc — always expandable, initial preview loaded async
+        isExpandable = true;
+expandAttr = ' onclick="app.toggleNoteExpanded(\'' + n.id + '\')" style="cursor:pointer"';
+        expandIcon = '<span class="note-expand-icon" id="note-icon-' + n.id + '">▸</span>';
+        preview = '📄 點擊載入文檔內容…';
+        // Body is empty initially; we'll lazy-load on expand
+        expandedBody = '<div class="note-body" id="' + noteId + '" style="display:none"></div>';
+      } else if (isLong) {
+        // Inline content, long
+        isExpandable = true;
+expandAttr = ' onclick="app.toggleNoteExpanded(\'' + n.id + '\')" style="cursor:pointer"';
+        expandIcon = '<span class="note-expand-icon" id="note-icon-' + n.id + '">▸</span>';
+        preview = stripMd(n.content).slice(0, 180) + '…';
+        expandedBody = '<div class="note-body" id="' + noteId + '" style="display:none">' + renderMd(n.content) + '</div>';
+      } else {
+        // Short inline content — no expand
+        preview = n.content || '';
+      }
+
+      return '<div class="note-card' + (isExpandable ? ' note-card-expandable' : '') + '" ' + dragHandlers + '>'
         + dragHandle
         + '<div style="flex:1;min-width:0">'
         + '<div class="note-title"' + expandAttr + '>' + n.title + expandIcon + '</div>'
@@ -521,14 +566,37 @@
 
   // ── Toggle note expand/collapse ──
   function toggleNoteExpanded(id) {
+    var note = GameData.notes.find(function(n) { return n.id === id; });
     var body = document.getElementById('note-body-' + id);
     var icon = document.getElementById('note-icon-' + id);
     if (!body) return;
     var isHidden = body.style.display === 'none';
-    body.style.display = isHidden ? 'block' : 'none';
-    if (icon) icon.textContent = isHidden ? '▾' : '▸';
-    var card = body.closest('.note-card');
-    if (card) card.classList.toggle('note-expanded', isHidden);
+    if (!isHidden) {
+      // Collapse
+      body.style.display = 'none';
+      if (icon) icon.textContent = '▸';
+      var card = body.closest('.note-card');
+      if (card) card.classList.remove('note-expanded');
+      return;
+    }
+    // Expand
+    if (note && note.docPath && !body.dataset.loaded) {
+      // Lazy-load doc content
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--dos-gray)">⏳ 載入中…</div>';
+      body.style.display = 'block';
+      if (icon) icon.textContent = '▾';
+      var card2 = body.closest('.note-card');
+      if (card2) card2.classList.add('note-expanded');
+      getDocContent(note.docPath, function(md) {
+        body.innerHTML = renderMd(md);
+        body.dataset.loaded = '1';
+      });
+    } else {
+      body.style.display = 'block';
+      if (icon) icon.textContent = '▾';
+      var card3 = body.closest('.note-card');
+      if (card3) card3.classList.add('note-expanded');
+    }
   }
 
   // ── Drag & Drop Reorder (edit mode) ──
