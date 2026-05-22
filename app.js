@@ -521,7 +521,7 @@
       const isLong = hasContent && n.content.length > 300;
       const noteId = 'note-body-' + n.id;
 
-      // Determine expand logic
+// Determine expand logic
       var expandAttr = '';
       var expandIcon = '';
       var preview = '';
@@ -531,7 +531,7 @@
       if (hasDocPath) {
         // Remote doc — always expandable, initial preview loaded async
         isExpandable = true;
-expandAttr = ' onclick="app.toggleNoteExpanded(\'' + n.id + '\')" style="cursor:pointer"';
+        expandAttr = ''; // click handled by card-level listener
         expandIcon = '<span class="note-expand-icon" id="note-icon-' + n.id + '">▸</span>';
         preview = '📄 點擊載入文檔內容…';
         // Body is empty initially; we'll lazy-load on expand
@@ -539,7 +539,7 @@ expandAttr = ' onclick="app.toggleNoteExpanded(\'' + n.id + '\')" style="cursor:
       } else if (isLong) {
         // Inline content, long
         isExpandable = true;
-expandAttr = ' onclick="app.toggleNoteExpanded(\'' + n.id + '\')" style="cursor:pointer"';
+        expandAttr = ''; // click handled by card-level listener
         expandIcon = '<span class="note-expand-icon" id="note-icon-' + n.id + '">▸</span>';
         preview = stripMd(n.content).slice(0, 180) + '…';
         expandedBody = '<div class="note-body" id="' + noteId + '" style="display:none">' + renderMd(n.content) + '</div>';
@@ -548,10 +548,13 @@ expandAttr = ' onclick="app.toggleNoteExpanded(\'' + n.id + '\')" style="cursor:
         preview = n.content || '';
       }
 
-      return '<div class="note-card' + (isExpandable ? ' note-card-expandable' : '') + '" ' + dragHandlers + '>'
+const expandClickAttr = isExpandable ? ' data-note-id="' + n.id + '" style="cursor:pointer"' : '';
+      const expandClass = isExpandable ? ' note-card-expandable' : '';
+
+      return '<div class="note-card' + expandClass + '" ' + dragHandlers + expandClickAttr + '>'
         + dragHandle
         + '<div style="flex:1;min-width:0">'
-        + '<div class="note-title"' + expandAttr + '>' + n.title + expandIcon + '</div>'
+        + '<div class="note-title">' + n.title + expandIcon + '</div>'
         + '<div class="note-content">' + preview + '</div>'
         + '<div class="note-footer">'
         + n.tags.map(function(t) { return '<span class="note-tag">' + t + '</span>'; }).join('')
@@ -562,6 +565,23 @@ expandAttr = ' onclick="app.toggleNoteExpanded(\'' + n.id + '\')" style="cursor:
         + '</div></div>';
     };
     document.getElementById('notes-list').innerHTML = notes.map(function(n, i) { return noteCard(n, i); }).join('');
+    // Show/hide "新增筆記" button based on edit mode
+    var btnNewNote = document.getElementById('btn-new-note');
+    if (btnNewNote) btnNewNote.style.display = state.isEditMode ? '' : 'none';
+    // Card-level click delegation for expand/collapse — covers entire card area
+    // but not .card-edit-bar (edit button), drag handle, or tags
+    var notesList = document.getElementById('notes-list');
+    if (notesList._expandBound) return; // avoid double binding on re-render
+    notesList.addEventListener('click', function(e) {
+      var card = e.target.closest('.note-card[data-note-id]');
+      if (!card) return;
+      // Ignore clicks inside card-edit-bar, drag-handle, or the edit/delete buttons
+      if (e.target.closest('.card-edit-bar, .drag-handle, .note-tag, button')) return;
+      // Also ignore clicks on the note-body toggle icon
+      if (e.target.closest('.note-body')) return;
+      app.toggleNoteExpanded(card.dataset.noteId);
+    });
+    notesList._expandBound = true;
   }
 
   // ── Toggle note expand/collapse ──
