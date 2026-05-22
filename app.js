@@ -440,33 +440,95 @@
     document.getElementById('systems-grid').innerHTML = addBtn + sys.map((s, i) => sysRow(s, i)).join('');
   }
 
-  // ── RENDER: Notes ──
+// ── Inline Markdown Renderer (lightweight, no deps) ──
+  // Strip markdown syntax for preview text
+  function stripMd(text) {
+    return text
+      .replace(/^#{1,6}\s+/gm, '')     // headers
+      .replace(/^---+$/gm, '')          // hr
+      .replace(/\*\*(.+?)\*\*/g, '$1')  // bold
+      .replace(/__(.+?)__/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')      // inline code
+      .replace(/^- /gm, '')             // list markers
+      .replace(/\n{2,}/g, ' · ')        // paragraph breaks → middle dot
+      .replace(/\n/g, ' ');             // single newline → space
+  }
+
+  function renderMd(text) {
+    // Escape HTML first
+    let h = text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // Headers: #### → <h4>, ### → <h3>, ## → <h2>, # → <h1>
+    h = h.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+    h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    // Horizontal rule
+    h = h.replace(/^---+$/gm, '<hr>');
+    // Bold: **text** or __text__
+    h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    h = h.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    // Inline code: `code`
+    h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // List items: - text (2-space indent = nested)
+    h = h.replace(/^  - (.+)$/gm, '<li class="md-li-nested">$1</li>');
+    h = h.replace(/^- (.+)$/gm, '<li>$1</li>');
+    // Wrap consecutive <li> in <ul>
+    h = h.replace(/((?:<li[^>]*>.*?<\/li>\n?)+)/g, '<ul>$1</ul>');
+    // Paragraph breaks
+    h = h.replace(/\n\n+/g, '</p><p>');
+    h = h.replace(/\n/g, '<br>');
+    // Wrap in <p> if not already wrapped
+    if (!h.startsWith('<h') && !h.startsWith('<hr') && !h.startsWith('<ul') && !h.startsWith('<p>')) {
+      h = '<p>' + h + '</p>';
+    }
+    return h;
+  }
+
+  // ── RENDER: Notes (collapsible long notes) ──
   function renderNotes() {
     const notes = GameData.notes;
     const noteCard = (n, idx) => {
       const dragHandle = state.isEditMode
-        ? `<span class="drag-handle" draggable="true" ondragstart="app.reorderDragStart(event,'notes',${idx})" ondragend="app.reorderDragEnd(event)" title="拖曳調整順序" style="margin-right:8px;align-self:flex-start;padding-top:2px;flex-shrink:0">☰</span>`
+        ? '<span class="drag-handle" draggable="true" ondragstart="app.reorderDragStart(event,\'notes\',' + idx + ')" ondragend="app.reorderDragEnd(event)" title="拖曳調整順序" style="margin-right:8px;align-self:flex-start;padding-top:2px;flex-shrink:0">☰</span>'
         : '';
       const dragHandlers = state.isEditMode
-        ? `ondragover="app.reorderDragOver(event)" ondragleave="app.reorderDragLeave(event)" ondrop="app.reorderDrop(event,${idx})"`
+        ? 'ondragover="app.reorderDragOver(event)" ondragleave="app.reorderDragLeave(event)" ondrop="app.reorderDrop(event,' + idx + ')"'
         : '';
-      return `
-      <div class="note-card" ${dragHandlers}>
-        ${dragHandle}
-        <div style="flex:1;min-width:0">
-          <div class="note-title">${n.title}</div>
-          <div class="note-content">${n.content}</div>
-          <div class="note-footer">
-            ${n.tags.map(t => `<span class="note-tag">${t}</span>`).join('')}
-            <span class="note-date">${n.updated}</span>
-            ${state.isEditMode ? `<div class="card-edit-bar">
-              <button class="btn-sm" onclick="app.openEdit('notes','${n.id}')">✎ 編輯</button>
-            </div>` : ''}
-          </div>
-        </div>
-      </div>`;
+      const isLong = n.content.length > 300;
+      const noteId = 'note-body-' + n.id;
+      const expandAttr = isLong ? ' onclick="app.toggleNoteExpanded(\'' + n.id + '\')" style="cursor:pointer"' : '';
+      const expandIcon = isLong ? '<span class="note-expand-icon" id="note-icon-' + n.id + '">▸</span>' : '';
+      const preview = isLong ? stripMd(n.content).slice(0, 180) + '…' : n.content;
+      const expandedBody = isLong
+        ? '<div class="note-body" id="' + noteId + '" style="display:none">' + renderMd(n.content) + '</div>'
+        : '';
+      return '<div class="note-card' + (isLong ? ' note-card-expandable' : '') + '" ' + dragHandlers + '>'
+        + dragHandle
+        + '<div style="flex:1;min-width:0">'
+        + '<div class="note-title"' + expandAttr + '>' + n.title + expandIcon + '</div>'
+        + '<div class="note-content">' + preview + '</div>'
+        + '<div class="note-footer">'
+        + n.tags.map(function(t) { return '<span class="note-tag">' + t + '</span>'; }).join('')
+        + '<span class="note-date">' + n.updated + '</span>'
+        + (state.isEditMode ? '<div class="card-edit-bar"><button class="btn-sm" onclick="app.openEdit(\'notes\',\'' + n.id + '\')">✎ 編輯</button></div>' : '')
+        + '</div>'
+        + expandedBody
+        + '</div></div>';
     };
-    document.getElementById('notes-list').innerHTML = notes.map((n, i) => noteCard(n, i)).join('');
+    document.getElementById('notes-list').innerHTML = notes.map(function(n, i) { return noteCard(n, i); }).join('');
+  }
+
+  // ── Toggle note expand/collapse ──
+  function toggleNoteExpanded(id) {
+    var body = document.getElementById('note-body-' + id);
+    var icon = document.getElementById('note-icon-' + id);
+    if (!body) return;
+    var isHidden = body.style.display === 'none';
+    body.style.display = isHidden ? 'block' : 'none';
+    if (icon) icon.textContent = isHidden ? '▾' : '▸';
+    var card = body.closest('.note-card');
+    if (card) card.classList.toggle('note-expanded', isHidden);
   }
 
   // ── Drag & Drop Reorder (edit mode) ──
@@ -1913,6 +1975,7 @@ window.app = {
     exportSheetJSON,
     restoreFromHistory, resetToDataJs,
     // Drag & drop
+    toggleNoteExpanded,
     dragStart, dragOver, dragLeave, drop, dragEnd,
     charDragStart, charDragOver, charDragLeave, charDrop, charDragEnd,
     reorderDragStart, reorderDragOver, reorderDragLeave, reorderDrop, reorderDragEnd,
