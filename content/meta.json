@@ -78,32 +78,95 @@
   ],
   "story_timeline": [
     {
-      "days": "Day 1 – 21",
-      "name": "共通路線：相遇與試探",
+      "days": "Day 1 -2",
+      "name": "共通路線：命運的相遇與收留",
       "tag": "common",
-      "desc": "主角接手靈樞堂，建立店鋪基礎，處理日常維修訂單。\nXavier 以維修手臂名義造訪，Lycaon 因被程式侵入失控闖入。\n雙角色登場，玩家初步了解世界觀與兩人的性格差異。",
+      "desc": "DAY1：\n主角基本日常維修演示\nXavier (澤維爾－攻略人物1) 因為要維修手臂找上主角\nLycaon (萊卡翁－攻略人物2)因罪人項圈失控闖進店鋪\n主角緊急處理Lycaon失控狀況後暫時收留Lycaon\n\nDAY２：\n主角得知Lycaon的編號X-02，替Lycaon取名為Lycaon，正式收留Lycaon\n主角與Xavier簽訂契約成為Xavier的私人維修師(無特殊系統純設定)\n主角購買犬用床墊給Lycaon\n",
       "progress": 40
     },
     {
-      "days": "Day 21 – 24",
-      "name": "分歧路線：情感的界線",
+      "days": "Day 3",
+      "name": "選擇路線：初次見面的衝突",
       "tag": "common",
-      "desc": "根據玩家在共通路線的選擇與好感度累積，劇情開始傾向往 Lycaon 或 Xavier 方向發展。角色互動加深，隱藏過去逐漸浮現。",
+      "desc": "DAY3：\nLycaon與Xavier在維修店相遇發生衝於，玩家須選擇分支路線，偏袒哪方\n根據路線不同，觸發角色對應的好感事件",
       "progress": 10
     },
     {
-      "days": "Day 24 – 28",
-      "name": "澤維爾路線：秩序與真相",
-      "tag": "xavier",
-      "desc": "Xavier 的色慾病毒全面爆發，神經梳理成為唯一穩定手段。高傲的審判官在生理崩潰與情感成癮之間掙扎。MC 需在信任、控制與真相之間做出選擇，通往三種結局。",
+      "days": "Day 4-5",
+      "name": "共通路線：蛇的幫助",
+      "tag": "common",
+      "desc": "DAY4：\n主角收到本地幫派(赤色之蛇)追討保護費的通知\n主角完成NPC維修任務，得到微型鋰電池(關鍵道具)\n\nDAY5：\n赤色之蛇的Viper(蛇腹)，上門提供了改造許可證與罪人項圈圖紙\n主角改造Lycaon的罪人項圈，讓他可以外出探險(開啟探險機制)\nXavier上門維修膝蓋\nLycaon回來撿到破損記憶體(關鍵道具)",
       "progress": 5
     },
     {
-      "days": "Day 24 – 28",
-      "name": "萊卡翁路線：野性與救贖",
+      "days": "Day 6-7",
+      "name": "萊卡翁：野性的防備心",
       "tag": "lycaon",
-      "desc": "Lycaon 的狂暴病毒進入危險期，只有 MC 能進行維修（撫摸）來穩定。從強制與敵意逐漸轉向依賴與獻身。MC 的態度決定他最終的歸宿——項圈之下是忠誠還是死亡。",
+      "desc": "DAY6：\n主角解析破損記憶體，試著解析裡面的資料發現Lycaon有關的資料，得知Lycaon是實驗體\nXavier因教會辦公室電壓出問題，來維修店工作\n因雷擊，導致維修店停電，主角修好電源，三人感情升溫日常事件\n\nDAY7：\n進行NPC陳婆婆維修事件，主角引導Lycaon放下心防，講述生在實驗室的經歷感受\n\nDAY8：\n主角的維修機台故障，Lycaon外出去廢棄的第九生化區尋找維修零件\n主角擔心Lycaon出事而在維修Xavier的工作中分神，Xavier因此不滿\nXavier得知Lycaon前往第九生化區，懷疑主角與Lycaon的意圖\n主角解釋後，Xavier沒消除疑慮留下一起等，等到Lycaon受重傷回來，Xavier留下一罐療傷修復噴霧後離開",
       "progress": 5
+    },
+    {
+      "days": "Day 9",
+      "name": "澤維爾：施以援手",
+      "desc": "DAY9：\nLycaon使用修復噴霧後傷口痊癒\n主角得知昨天使用Xavier使用遠程攻擊幫了Lycaon\nXavier來店裡時，主角發現他受傷，得知Xavier因無授權使用遠程攻擊，而受教會懲罰\n深化Xavier關於教會的背景(信任主教)\n",
+      "tag": "xavier",
+      "progress": 0
+    },
+    {
+      "days": "Day 10",
+      "name": "共通路線：感染體與伊甸園計劃",
+      "desc": "DAY10：\n重大事件發生，病毒入侵義肢，控制改裝義肢變為狂暴的感染體\n三人一起在維修店共同防禦\n\nDAY11：\n三人成功防禦維修店\nXavier猜測感染體被人為操控，初步得知伊甸園計劃與X-02(Lycaon)有關，想確認是否與教會有關",
+      "tag": "common",
+      "progress": 0
+    },
+    {
+      "days": "Day 12-13",
+      "name": "共通路線：準備潛入舊教區",
+      "desc": "DAY12：\n主角引導Lycaon學習人性日常片段\nXavier為了確認伊甸園計劃跟感染體是否與教會有關，帶領教會來重建維修店\n因Xavier擅自行動與不近人情，可能讓Lycaon受危險，兩人起口角\n\nDAY13：\nXavier帶來一枚儲存晶片，資料顯示舊城區有個研究站，研究內容為人類意識，並且有感染體的初期樣本，Xavier為了確認教會在第十舊教堂區做什麼，準備前往查看，主角與Lycaon一起前往",
+      "tag": "common",
+      "progress": 0
+    },
+    {
+      "days": "Day 14",
+      "name": "澤維爾：重生與信仰",
+      "desc": "DAY14：\n主角與Xavier一起去黑市購買潛入用裝備\n得知Xavier成長背景於黑市，在這裡被Aurelius主教收養，得到名字\n主角皆露自身成長背景",
+      "tag": "xavier",
+      "progress": 0
+    },
+    {
+      "days": "Day 15",
+      "name": "共通路線：失控與破滅",
+      "desc": "DAY15：\nXavier與Lycaon潛入舊教堂，到了控制台進入系統時，Xavier看到自己已被Aurelius主教從教會除名，被認定為教會叛徒\n\n警報響起，兩人被教會武裝人員追捕，Lycaon在追捕過程中失控意識不清，主角協助兩人逃脫\n\nXavier因被教會除名，信仰崩塌失落",
+      "tag": "common",
+      "progress": 0
+    },
+    {
+      "days": "Day 16-17",
+      "name": "選擇路線：阻止Xavier或幫助Lycaon",
+      "desc": "DAY16：\nXavier想親自前往教會確認主教意圖，Lycaon再度因腦中的指令失控，玩家須選擇幫助哪誰\n\nDAY17：\nD16選擇幫Xavier—兩人回到維修店後，幫助Lycaon穩定下來，得知伊甸園計劃核心在上城區\n\nD16選擇幫幫助Lycaon—兩人出去找Xavier，將受重傷的Xavier帶回維修店，Xavier拿出找到的晶片，得知伊甸園計劃核心位於上城區\n\n\n\n幫助Xavier—主角留下穩定器，追上已經衝出門的Xavier，兩人被巡邏機器人發現，逃脫中Xavier走丟，主角找到受傷的Xavier把人帶回維修店\n\n幫助Lycaon—主角進入地下室幫助Lycaon穩定下來",
+      "tag": "common",
+      "progress": 0
+    },
+    {
+      "days": "Day 18-22",
+      "name": "共通路線：進入上城教會與伊甸園的真相",
+      "desc": "DAY18：\n三人決定前往上城區，去找Viper買通行證，Viper要求伊甸園計劃的真相作為回報\n\nDAY19：\n三人成功到達上城區，遇到Xavier以前的教會同事Cyrus，三人被追捕下逃入上城區教堂 \n\nDAY20：\n三人進入教堂中樞，找到更多關於伊甸園計劃的資料\n\nDAY21：\n到達伊甸園核心，得知伊甸園計劃最終目的(讓人類實現永生，成為神)與Lycaon是啟動伊甸園計畫的鑰匙",
+      "tag": "common",
+      "progress": 0
+    },
+    {
+      "days": "Day 23-24",
+      "name": "選擇路線：選擇救Xavier或Lycaon或都救",
+      "desc": "DAY23：\n選擇救Lycaon—帶著Lycaon逃出教堂，準備營救Xavier，發現伊甸園核心沒被摧毀，準備阻止教會\n選擇救Xavier—帶著Xavier逃出教堂，準備營救Lycaon，發現伊甸園核心沒被摧毀，準備阻止教會\n選擇都救(有條件解鎖)—發現伊甸園核心沒被摧毀，準備阻止教會\n\nDAY24：\n回到教會阻止主教，成功摧毀伊甸園計劃，三人回到舊城區",
+      "tag": "common",
+      "progress": 0
+    },
+    {
+      "days": "Day 25~28",
+      "name": "選擇路線：結局",
+      "desc": "DAY25：\n選擇與哪誰培養感情，或3人一起培養感情(有條件解鎖)\n\nDAY26：\n＊D23時選擇救Xavier\n—選擇喜歡Xavier\nDAY26~28判斷好感是否達標，進行Xavier HE劇情或Xavier BE劇情\n\n—選擇喜歡Lycaon\n進行Lycaon普通劇情\n\n＊D23時選擇救Lycaon\n—選擇喜歡Xavier\n進行Xavier普通劇情\n\n—選擇喜歡Lycaon\nDAY26~28判斷好感是否達標，進行Lycaon HE劇情或Lycaonr BE劇情\n\n＊D23時選擇救都救\nDAY26~28進行3人HE劇情\n",
+      "tag": "common",
+      "progress": 0
     }
   ],
   "endings": [
