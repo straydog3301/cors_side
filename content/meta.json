@@ -318,6 +318,61 @@
         "強氣受"
       ],
       "color": "#E12B83"
+    },
+    {
+      "id": "char_1779553787508",
+      "name_zh": "Viper(蛇腹)",
+      "name_en": "NPC",
+      "route": "common",
+      "icon": "👤",
+      "color": "#004B97",
+      "role": "情報販子",
+      "description": "上半臉戴著白色面具，淺金色瞳孔，臉型消瘦，臉上時常掛著笑容，為下城區黑幫「赤色之蛇」的幹部。",
+      "tags": [
+        "黑幫",
+        "神秘"
+      ]
+    },
+    {
+      "id": "char_1779554134078",
+      "name_zh": "Aurelius(奧瑞利烏斯)",
+      "name_en": "NPC",
+      "route": "common",
+      "icon": "👤",
+      "color": "#004B97",
+      "role": "教會主教",
+      "description": "創辦教會之人，對於操弄人心非常有一套，建立了上下城區不同體系的教會。\n\n伊甸園計劃的主導者。",
+      "tags": [
+        "權威",
+        "善於操弄人心"
+      ]
+    },
+    {
+      "id": "char_1779554526213",
+      "name_zh": "Cyrus(賽勒斯)",
+      "name_en": "NPC",
+      "route": "common",
+      "icon": "👤",
+      "color": "#004B97",
+      "role": "上城區護衛官",
+      "description": "被教會收養的小孩，與Xavier一起長大，後晉升到上城區，忌妒Xavier受主教賞識",
+      "tags": [
+        "忌妒",
+        "鄙視"
+      ]
+    },
+    {
+      "id": "char_1779554640038",
+      "name_zh": "?(還沒取名子)",
+      "name_en": "NPC",
+      "route": "common",
+      "icon": "👤",
+      "color": "#33ff33",
+      "role": "Lycaon小時候的玩伴",
+      "description": "被撿去實驗室的小男孩，是與Lycaon相處最久的實驗體，後笨送至上城區接受實驗，改造失敗後成為沒有意識的人偶",
+      "tags": [
+        "戰鬥人偶"
+      ]
     }
   ],
   "systems": [
