@@ -334,7 +334,7 @@
             ${state.isEditMode ? `<button class="btn-sm btn-outline" style="margin-left:auto" onclick="app.openEdit('characters','${c.id}')">編輯</button>` : ''}
           </div>
           <div class="char-page-body">
-            <p class="char-page-desc">${c.description}</p>
+            <p class="char-page-desc">${nl2br(c.description)}</p>
             <div class="char-tags">${c.tags.map(t => `<span class="char-tag" style="border-color:${c.color||'var(--dos-border)'};color:${c.color||'var(--dos-gray)'}">${t}</span>`).join('')}</div>
           </div>
         </div>
