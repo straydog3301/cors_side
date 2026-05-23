@@ -373,7 +373,7 @@
     let html = filterHtml;
 
     // World Timeline
-    html += `<h4 style="font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">世界觀時間線</h4>` +
+    html += `<h4 style="font-family:var(--font-title);font-size:0.85rem;color:var(--dos-white);letter-spacing:2px;margin-bottom:16px;">世界觀</h4>` +
       editBtn + filteredTl.map(({ item, origIdx }) => {
       var ostyle = opacityStyle(item.progress);
       var cursorStyle = state.isEditMode ? 'cursor:pointer;' : '';
